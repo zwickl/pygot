@@ -5,9 +5,13 @@ import re
 from itertools import izip,  cycle, chain, repeat, islice
 import argparse 
 from math import ceil
-#import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib import font_manager
+
+try:
+    import matplotlib.pyplot as plt
+    from matplotlib import font_manager
+except ImportError:
+    sys.exit('matplotlib needs to be installed to use this module')
+
 from pygot.utils import flatten_array, linspace, find_shortest_unique_leading_substrings
 
 def padded(toPad, n, fillvalue=None):

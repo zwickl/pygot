@@ -48,9 +48,8 @@ else:
     sys.stderr.write("searching for packages\n")
     PACKAGES = find_packages()
     EXTRA_KWARGS = dict(
-        install_requires = ['setuptools'],
-        include_package_data=True,
-        test_suite = "pygot.test"
+        install_requires = ['setuptools', 'matplotlib>=1.3', 'dendropy'],
+        include_package_data=True
     )
 
 PACKAGE_DIRS = [p.replace(".", os.path.sep) for p in PACKAGES]
@@ -63,6 +62,10 @@ ENTRY_POINTS = {}
 
 SCRIPT_SUBPATHS = [
     ['scripts', 'dendropyScoreTriples.py'],
+    ['scripts', 'calculateFlux.py'],
+    ['scripts', 'cumulativeAndPieFigure.py'],
+    ['scripts', 'plotFlux.py'],
+    ['scripts', 'treeManipulator.py']
 ]
 SCRIPTS = [os.path.join(*i) for i in SCRIPT_SUBPATHS]
 sys.stderr.write("\nscripts identified: %s\n" % ", ".join(SCRIPTS))
@@ -94,7 +97,7 @@ else:
 ###############################################################################
 # Main setup
 
-from pygot import __version__
+__version__ = 1.0
 EXTRA_KWARGS["zip_safe"] = True
 
 ### compose long description ###
@@ -116,12 +119,12 @@ setup(name='pygot',
             "Environment :: Console",
             "Intended Audience :: Developers",
             "Intended Audience :: Science/Research",
-            "License :: OSI Approved :: BSD License",
+            "License :: OSI Approved :: GPL3",
             "Natural Language :: English",
             "Operating System :: OS Independent",
             "Programming Language :: Python",
             "Topic :: Scientific/Engineering :: Bio-Informatics",
             ],
-      keywords='phylogenetics phylogeny phylogenies phylogeography evolution evolutionary biology systematics coalescent population genetics phyloinformatics bioinformatics',
+      keywords='phylogenetics phylogeny phylogenies phylogenomics evolution evolutionary biology systematics phyloinformatics bioinformatics',
       **EXTRA_KWARGS
       )

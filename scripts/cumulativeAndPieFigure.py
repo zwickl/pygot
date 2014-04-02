@@ -6,6 +6,11 @@ import re
 from os import path
 from math import ceil
 
+#this is important, because the backend can default to an interactive Tk based one even
+#on clusters where there is no display
+import matplotlib
+matplotlib.use('pdf')
+
 import matplotlib.pyplot as plt
 from matplotlib import patches
 from matplotlib.lines import Line2D
@@ -180,7 +185,7 @@ defaultHatches = [ ' ', ' ', ' ', ' ' ]
 parser = PlottingArgumentParser(description='make a cumulative support plot with embedded pie, possibly as a multiplot', 
         defaultGreys=['0.55', '0.0', '0.25', '1.0'], 
         defaultMarkers="xo*",
-        defaultMarkerSizes=['12', '12', '20'],
+        defaultMarkerSizes=[12, 12, 20],
         defaultLineWidth=['4'],
         defaultHatches=defaultHatches, 
         defaultXrange=[0.5, 1.0],

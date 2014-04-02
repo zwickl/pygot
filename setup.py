@@ -16,25 +16,9 @@
 ##############################################################################
 
 import sys
-
-"""
-Package setup and installation.
-"""
-'''
-from distutils.core import setup
-setup(name='pygot',
-      version='1.0',
-      description='PhYloGenOmic Tools',
-      author='Derrick Zwickl',
-      author_email='zwickl@email.arizona.edu',
-      packages = find_packages()
-      )
-
-sys.exit()
+import os
 
 #HACK OF DENDROPY setup.py BELOW
-'''
-import os
 
 ###############################################################################
 # setuptools/distutils/etc. import and configuration
@@ -110,46 +94,21 @@ else:
 ###############################################################################
 # Main setup
 
-from dendropy import __version__, __revision__
+from pygot import __version__
 EXTRA_KWARGS["zip_safe"] = True
 
 ### compose long description ###
 long_description = open('README.txt').read()
-long_description = long_description.replace("DendroPy-3.x.x", "DendroPy-%s" % __version__)
-long_description = long_description.replace("""download the source code archive""",
-    """`download the source code archive <http://pypi.python.org/packages/source/D/DendroPy/DendroPy-%s.tar.gz>`_""" % __version__)
-
-if __revision__.is_available:
-    revision_text = " (revision: %s, %s)" % (__revision__.commit_id, str(__revision__.commit_date))
-else:
-    revision_text = ""
-long_description = long_description + ("""\
-
-Current Release
-===============
-
-The current release of DendroPy is version %s%s.
-
-""" % (__version__, revision_text))
 
 setup(name='pygot',
       version=__version__,
       author='Derrick Zwickl',
       author_email='zwickl@email.arizona.edu',
-      url='http://packages.python.org/DendroPy/',
+      url='https://github.com/zwickl/pygot',
       description='A Python library and scripts for summarization and post processing of phylogenomic analyses', 
       license='GPL3',
       packages=PACKAGES,
       package_dir=dict(zip(PACKAGES, PACKAGE_DIRS)),
-      # For some reason, following does not work in 2.5 (not tried in 2.6),
-      # so this packaging is now implemented through processing of MANIFEST.in
-#      package_data={
-#        "" : ['doc/Makefile',
-#              '/doc/source',
-#              'extras'
-#             ],
-#        "dendropy.test" : ["data/trees"],
-#      },
       scripts = SCRIPTS,
       long_description=long_description,
       entry_points = ENTRY_POINTS,

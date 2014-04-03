@@ -355,7 +355,7 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
 if __name__ == '__main__':
     import sys
     from argparse import ArgumentParser
-    from dzutils import proportion_type
+    from pygot.utils import proportion_type
 
     #use argparse module to parse commandline input
     parser = ArgumentParser(description='make gene tree flux figure')

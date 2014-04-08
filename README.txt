@@ -10,9 +10,13 @@ Zwickl D.J., Stein J.C., Wing R.A., Ware D. and Sanderson M.J. 2014. Disentangli
 Note that it will be difficult to understand what this all means without reading the above paper.
 
 Currently contains functionality to:
-summarize sets of bootstrap trees (required for the following)
-plot cumulative support diagrams
-plot flux diagrams
+quartet summaries:
+    summarize sets of bootstrap trees (required for the following)
+    plot cumulative support diagrams
+    plot flux diagrams
+alignment block-shifts:
+    detect block-shifts
+
 
 Documentation and scripts are being improved, so email me if you want to use this and have any trouble
 or questions
@@ -20,6 +24,8 @@ or questions
 zwickl@email.arizona.edu
 
 ##############################
+
+QUARTET BASED SUMMARIES, CUMULATIVE SUPPORT DIAGRAMS AND FLUX DIAGRAMS
 
 See masterScript.sh in examples directory if you'd like to jump in without reading the following ...
 
@@ -56,3 +62,34 @@ Minimal workflow is this:
 If you used multiple treatments for a single set of loci, those treatments can additionally be 
 compared by means of a "flux diagram", made with plotFlux.py.
 
+#############################
+
+DETECTION OF BLOCK-SHIFT ARTIFACTS
+
+Block shifts are defined as stretches of an alignment in which one (or a few) taxon differs from 
+generally conserved columns.  None of the columns individually are out of the ordinary, but taken
+as a whole the region is generally clearly misaligned.  Because of this typical alignment "cleaning"
+methods (GBLOCKS, Aliscore, etc.) don't pick up on the error.  This is not a typical or realistic example,
+but a block shift might look like this:
+
+T1 ACGTACGTACGT
+T2 ACGTACGTACGT
+T3 ACGTACGTACGT
+T4 ACGAAAAAAA--
+
+The script simply scans along each sequence in a NON-INTERLEAVED nexus alignment file, and reports
+on regions that appear to be block-shifts in any of the taxa.  False positive block-shifts
+can be sometimes identified, especially in distantly related taxa.  Take a look at the identified
+regions of your alignments to get a feeling for whether identified regions are real or not.  The
+details of the detection algorithm can be changed with command line flags.
+
+This would be the output for the above example, indicating that bases 4-10 in taxon t4 are
+identified as a block-shift:
+
+alignment.nex
+T1
+T2
+T3
+T4 4-10
+
+#############################

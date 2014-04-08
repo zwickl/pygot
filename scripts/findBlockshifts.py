@@ -14,8 +14,8 @@ from pygot.utils import proportion_type
 
 parser = ArgumentParser(description='look for regions taxon by taxon that are poorly aligned')
 
-parser.add_argument('-mr', '--minimal-range', action='store_true', default=False,
-                    help='output range starting at first mismatch and ending at last, rather than start of first window that trips mismatch criterion (default false)')
+parser.add_argument('--output-full-window-range', action='store_true', default=False,
+                    help='output coordinates of the actual windows that trip the mismatch criterion, rather than starting at first mismatch and ending at last within the window (default false)')
 
 parser.add_argument('-d', '--debug', action='store_true', default=False,
                     help='output a bunch of extra crap')
@@ -44,6 +44,18 @@ options = parser.parse_args()
 
 
 ofile = open(options.outputfile, 'w') if options.outputfile else sys.stdout
+
+
+sys.stderr.write('Algorithm details:\n')
+sys.stderr.write('\tRegion length of window tested: %d\n' % options.region_length)
+sys.stderr.write('\tMinimum taxa to consider column: %d\n' % options.min_tax_in_column)
+sys.stderr.write('\tRequired proportion of column conserved\n\t\t(proportion must be > than this value): %d\n' % options.consensus_proportion)
+sys.stderr.write('\tRequired proportion of sequence within\n\t\twindow not matching consensus\n\t\t(proportion must be >= than this value): %.2f\n' % options.mismatch_proportion)
+if not options.output_full_window_range:
+    sys.stderr.write('\tIdentified regions reported from first mismatch base to last\n')
+else:
+    sys.stderr.write('\tIdentified regions reported by start to end of window coordinates\n')
+
 
 for nfile in options.filenames:
     ofile.write('%s\n' % nfile)
@@ -94,19 +106,19 @@ for nfile in options.filenames:
             if options.debug:
                 sys.stderr.write('%s\t%d\t%d\t%s\n' % (tax, startIndex, mismatchCount, window))
             if foundAt < 0 and mismatchCount >= reqMismatchNum:
-                if options.minimal_range:
+                if not options.output_full_window_range:
                     startOffset = window.index(1)
                     foundAt = startIndex + startOffset
                 else:
                     foundAt = startIndex
                 ofile.write(' %d' % (foundAt + 1))
-            elif foundAt >= 0 and mismatchCount < reqMismatchNum:
-                if options.minimal_range:
-                    end = startIndex + options.region_length - list(reversed(window)).index(1)
+            if foundAt >= 0 and (mismatchCount < reqMismatchNum or startIndex == (seqLen - options.region_length - 1)):
+                if not options.output_full_window_range:
+                    end = startIndex + options.region_length - list(reversed(window)).index(1) - 1
                 else:
                     end = startIndex + options.region_length
 
-                ofile.write('-%d' % end)
+                ofile.write('-%d' % (end + 1))
                 foundAt = -1
         ofile.write('\n')
 

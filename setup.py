@@ -48,7 +48,7 @@ else:
     sys.stderr.write("searching for packages\n")
     PACKAGES = find_packages()
     EXTRA_KWARGS = dict(
-        install_requires = ['setuptools', 'matplotlib>=1.3', 'dendropy'],
+        install_requires = ['setuptools', 'matplotlib>=1.2', 'dendropy'],
         include_package_data=True
     )
 
@@ -65,7 +65,8 @@ SCRIPT_SUBPATHS = [
     ['scripts', 'calculateFlux.py'],
     ['scripts', 'cumulativeAndPieFigure.py'],
     ['scripts', 'plotFlux.py'],
-    ['scripts', 'treeManipulator.py']
+    ['scripts', 'treeManipulator.py'],
+    ['scripts', 'findBlockshifts.py']
 ]
 SCRIPTS = [os.path.join(*i) for i in SCRIPT_SUBPATHS]
 sys.stderr.write("\nscripts identified: %s\n" % ", ".join(SCRIPTS))

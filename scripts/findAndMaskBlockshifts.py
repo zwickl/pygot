@@ -36,7 +36,10 @@ parser.add_argument('--out-summary-file', type=str, default=None,
                     help='file to write summary output to (default stdout)')
 
 parser.add_argument('--out-alignment-file', type=str, default=None, 
-                    help='file to write summary output to (default stdout)')
+                    help='file to write summary output to (only makes sense if 1 input alignment; default is original alignment names + .masked')
+
+parser.add_argument('--ignore-patterns', action='append', default=[], 
+                    help='regex patterns matching taxon names to ignore when masking alignment (can appear multiple times)')
 
 #variable number of arguments
 parser.add_argument('filenames', nargs='*', default=[], 
@@ -132,10 +135,18 @@ for nfile in options.filenames:
         for windows, (tax, seq) in zip(shiftedRegions, taxAndSequenceList):
             otax = re.sub('[ ]', '_', tax)
             listSeq = [ c for c in seq ]
-            for start, end in windows:
-                winLen = end - start + 1
-                listSeq[start:end+1] = 'N' * winLen
+            match = None
+            for patt in options.ignore_patterns:
+                match = re.search(patt, tax)
+                if match is not None:
+                    break
+
+            if not match:
+                for start, end in windows:
+                    winLen = end - start + 1
+                    listSeq[start:end+1] = 'N' * winLen
             outnex.write('%s %s\n' % (otax, ''.join(listSeq)))
         outnex.write(';\n%s' % ''.join(endLinesInNexus))
 
 ofile.close()
+

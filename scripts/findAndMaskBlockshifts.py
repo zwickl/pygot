@@ -32,8 +32,11 @@ parser.add_argument('-c', '--consensus-proportion', type=proportion_type, defaul
 parser.add_argument('-m', '--mismatch-proportion', type=proportion_type, default=0.5,
                     help='min proportion of region that does not match consensus to be considered poorly aligned (default 0.5)')
 
-parser.add_argument('-o', '--outputfile', type=str, default=None, 
-                    help='file to write output to (default stdout)')
+parser.add_argument('--out-summary-file', type=str, default=None, 
+                    help='file to write summary output to (default stdout)')
+
+parser.add_argument('--out-alignment-file', type=str, default=None, 
+                    help='file to write summary output to (default stdout)')
 
 #variable number of arguments
 parser.add_argument('filenames', nargs='*', default=[], 
@@ -42,9 +45,7 @@ parser.add_argument('filenames', nargs='*', default=[],
 #now process the command line
 options = parser.parse_args()
 
-
-ofile = open(options.outputfile, 'w') if options.outputfile else sys.stdout
-
+ofile = open(options.out_summary_file, 'w') if options.out_summary_file else sys.stdout
 
 sys.stderr.write('Algorithm details:\n')
 sys.stderr.write('\tRegion length of window tested: %d\n' % options.region_length)
@@ -55,7 +56,6 @@ if not options.output_full_window_range:
     sys.stderr.write('\tIdentified regions reported from first mismatch base to last\n')
 else:
     sys.stderr.write('\tIdentified regions reported by start to end of window coordinates\n')
-
 
 for nfile in options.filenames:
     ofile.write('%s\n' % nfile)
@@ -71,6 +71,7 @@ for nfile in options.filenames:
     cols = []
     consensuses = ['-'] * seqLen
     skipStates = ['-', 'n', 'N', '?']
+
     #find the consensus for each column
     for index in xrange(seqLen):
         #grab non-ambiguous bases in the column
@@ -91,14 +92,16 @@ for nfile in options.filenames:
                 sys.stderr.write('%d\t%s\t%d\n' % (index, state, count))
             if count > (options.consensus_proportion * numNonAmbig):
                 consensuses[index] = state
-    
+   
+    #now scan each sequence
     reqMismatchNum = int(options.region_length * options.mismatch_proportion)
+    shiftedRegions = []
     for tax, seq in taxAndSequenceList:
+        thisRegion = []
         mismatchList = [ 0 if seq[index] == consensuses[index] or consensuses[index] == '-' or seq[index] in skipStates else 1 for index in xrange(seqLen) ]
         #standardize the taxon names
         #otax = re.sub('[ _]', '.', tax)
         otax = re.sub('[ ]', '_', tax)
-        ofile.write('%s' % otax)
         foundAt = -1
         for startIndex in xrange(seqLen - options.region_length):
             window = mismatchList[startIndex:startIndex+options.region_length]
@@ -111,14 +114,28 @@ for nfile in options.filenames:
                     foundAt = startIndex + startOffset
                 else:
                     foundAt = startIndex
-                ofile.write(' %d' % (foundAt + 1))
             if foundAt >= 0 and (mismatchCount < reqMismatchNum or startIndex == (seqLen - options.region_length - 1)):
                 if not options.output_full_window_range:
                     end = startIndex + options.region_length - list(reversed(window)).index(1) - 1
                 else:
                     end = startIndex + options.region_length
 
-                ofile.write('-%d' % (end + 1))
+                thisRegion.append((foundAt, end))
                 foundAt = -1
-        ofile.write('\n')
 
+        ofile.write('%s %s\n' % (otax, ' '.join(['%d-%d' % (wind[0] + 1, wind[1] + 1) for wind in thisRegion])))
+        shiftedRegions.append(thisRegion)
+
+    outAlignment = options.out_alignment_file or nfile + '.masked'
+    with open(outAlignment, 'w') as outnex:
+        outnex.write('%s' % ''.join(beginningLinesInNexus))
+        for windows, (tax, seq) in zip(shiftedRegions, taxAndSequenceList):
+            otax = re.sub('[ ]', '_', tax)
+            listSeq = [ c for c in seq ]
+            for start, end in windows:
+                winLen = end - start + 1
+                listSeq[start:end+1] = 'N' * winLen
+            outnex.write('%s %s\n' % (otax, ''.join(listSeq)))
+        outnex.write(';\n%s' % ''.join(endLinesInNexus))
+
+ofile.close()

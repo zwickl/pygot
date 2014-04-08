@@ -92,4 +92,10 @@ T2
 T3
 T4 4-10
 
+The masked alignment output would look like this:
+T1 acgtacgtacgt
+T2 acgtacgtacgt
+T3 acgtacgtacgt
+T4 acgNNNNNNN--
+
 #############################

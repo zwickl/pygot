@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 
 ##############################################################################
-##  Phylogenomic visualization package.
+##  Phylogenomic tools package.
 ##
 ##  Copyright 2013 Derrick J. Zwickl
 ##  All rights reserved.
@@ -48,9 +48,12 @@ else:
     sys.stderr.write("searching for packages\n")
     PACKAGES = find_packages()
     EXTRA_KWARGS = dict(
-        install_requires = ['setuptools', 'matplotlib>=1.2', 'dendropy'],
+        install_requires = ['setuptools', 'dendropy'], 
         include_package_data=True
     )
+
+#this would be necessary to read gffs and rewrite alignments based on them (biopython too)
+#install_requires = ['setuptools', 'dendropy', 'distribute>=0.6.49', 'bcbio-gff'],
 
 PACKAGE_DIRS = [p.replace(".", os.path.sep) for p in PACKAGES]
 PACKAGE_INFO = [("% 40s : %s" % p) for p in zip(PACKAGES, PACKAGE_DIRS)]
@@ -66,10 +69,32 @@ SCRIPT_SUBPATHS = [
     ['scripts', 'cumulativeAndPieFigure.py'],
     ['scripts', 'plotFlux.py'],
     ['scripts', 'treeManipulator.py'],
-    ['scripts', 'findBlockshifts.py']
+    ['scripts', 'findAndMaskBlockshifts.py']
 ]
 SCRIPTS = [os.path.join(*i) for i in SCRIPT_SUBPATHS]
-sys.stderr.write("\nscripts identified: %s\n" % ", ".join(SCRIPTS))
+sys.stderr.write("\nscripts identified: %s\n" % "\n\t".join(SCRIPTS))
+
+try:
+    mpl_needed = '1.2'
+    import matplotlib
+    mpl_ver = matplotlib.__version__
+    if not float(mpl_ver[:3]) >= float(mpl_needed):
+        sys.stderr.write('*******************\nNOTE: matplotlib VERSION %s OR LATER IS REQUIRED (%s found).\nIT IS NECESSARY FOR ALL PLOTTING FUNCTIONALITY.\nYOU MAY NEED TO INSTALL IT MANUALLY (see http://matplotlib.org/downloads.html)\n*******************\n' % (mpl_needed, mpl_ver))
+
+except ImportError:
+    sys.stderr.write('*******************\nNOTE: matplotlib PACKAGE COULD NOT BE IMPORTED.\nIT IS NECESSARY FOR ALL PLOTTING FUNCTIONALITY.\nYOU MAY NEED TO INSTALL IT MANUALLY (see http://matplotlib.org/downloads.html)\n*******************\n')
+
+'''don't need biopython yet
+try:
+    bp_needed = '1.5'
+    import Bio
+    bp_ver = Bio.__version__
+    if not float(bp_ver[:3]) >= float(bp_needed):
+        sys.stderr.write('*******************\nNOTE: biopython VERSION %s OR LATER IS REQUIRED (%s found).\nIT IS NECESSARY FOR ALL PLOTTING FUNCTIONALITY.\nYOU MAY NEED TO INSTALL IT MANUALLY (see http://biopython.org/wiki/Download)\n*******************\n' % (bp_needed, bp_ver))
+
+except ImportError:
+    sys.stderr.write('*******************\nNOTE: matplotlib PACKAGE COULD NOT BE IMPORTED.\nIT IS NECESSARY FOR ALL PLOTTING FUNCTIONALITY.\nYOU MAY NEED TO INSTALL IT MANUALLY (see http://matplotlib.org/downloads.html)\n*******************\n')
+'''
 
 ###############################################################################
 # setuptools/distuils command extensions

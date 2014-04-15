@@ -16,12 +16,36 @@ quartet summaries:
     plot flux diagrams
 alignment block-shifts:
     detect block-shifts
-
+    mask block-shifts
 
 Documentation and scripts are being improved, so email me if you want to use this and have any trouble
 or questions
 -Derrick Zwickl
 zwickl@email.arizona.edu
+
+##############################
+
+INSTALLATION:
+
+This could use some work and testing yet, but the typical python install procedure of
+
+python setup.py install 
+
+should work (you might need to add sudo to the start of that line).  
+Or you could just run things in the example directories, as demonstrated in the sample scripts.  
+It you install it globally you may need to put the script install location into your PATH environment
+variable, or copy the script files (in the scripts directory) somewhere else in your path.
+
+Dependencies:
+-The Dendropy library (http://pythonhosted.org/DendroPy/) is required for all quartet based summaries.
+The setup procedure above will attempt to install it for you if necessary.
+
+-The matplotlib library (http://matplotlib.org/) is required for making any figures.  This can be
+non-trivial to get installed, and downloading an installer package for your system generally seems
+to work better than using easy_install or pip.  The pygot setup script will not attempt to install
+this for you.
+
+-The block-shift related functions have no external dependencies.
 
 ##############################
 
@@ -58,9 +82,11 @@ Minimal workflow is this:
     each of the triplet resolutions, or making a "cumulative support diagram" using 
     cumulativeAndPieFigure.py, a much richer summary
 
-
 If you used multiple treatments for a single set of loci, those treatments can additionally be 
 compared by means of a "flux diagram", made with plotFlux.py.
+
+Note that there are a large number of command line arguments to the plotting scripts that can
+customize exactly how the figures look.
 
 #############################
 

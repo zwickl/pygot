@@ -3,25 +3,29 @@
 
 Code contributed by: Rob Knight <rob@spot.colorado.edu>
 
-usage:
-
-  python arrow_demo.py realistic|full|sample|extreme
-
 DJZ - this is a fairly confusing sample file that I adapted for my purposes
 and stripped of pylab dependency
 (see http://matplotlib.org/examples/pylab_examples/arrow_demo.html)
 
 """
-#this is important, because the backend can default to an interactive Tk based one even
-#on clusters where there is no display
-import matplotlib
-matplotlib.use('pdf')
 
-import matplotlib.pyplot as plt
+import sys
 import itertools
 import operator
 from math import tan, radians, sin, sqrt, pi 
+
+try:
+    import matplotlib
+except ImportError:
+    sys.exit('Sorry, matplotlib is necessary to run this plotting script.\nSee http://matplotlib.org/downloads.html')
+#this is important, because the backend can default to an interactive Tk based one even
+#on clusters where there is no display
+matplotlib.use('pdf')
+
+import matplotlib.pyplot as plt
+
 from pygot.utils import flatten_array
+
 
 def add_tuples(t1, t2):
     return tuple(map(operator.add, t1, t2))
@@ -353,9 +357,7 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
     return fig
 
 if __name__ == '__main__':
-    import sys
     from argparse import ArgumentParser
-    from pygot.utils import proportion_type
 
     #use argparse module to parse commandline input
     parser = ArgumentParser(description='make gene tree flux figure')

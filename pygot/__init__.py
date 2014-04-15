@@ -26,11 +26,17 @@ import os
 ###############################################################################
 ## Populate the 'pygot' namespace
 
-from pygot import plotutils
+try:
+    from matplotlib import __version__ as __ver
+except ImportError:
+    pass
+else:
+    from pygot import plotutils
+
 from pygot.quartets import *
 from pygot import utils
 from pygot import dendroutils
-
+#from pygot import biopyutils
 
 ###############################################################################
 ## PACKAGE METADATA

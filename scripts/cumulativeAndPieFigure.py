@@ -6,9 +6,13 @@ import re
 from os import path
 from math import ceil
 
+try:
+    import matplotlib
+except ImportError:
+    sys.exit('Sorry, matplotlib is necessary to run this plotting script.\nSee http://matplotlib.org/downloads.html')
+
 #this is important, because the backend can default to an interactive Tk based one even
 #on clusters where there is no display
-import matplotlib
 matplotlib.use('pdf')
 
 import matplotlib.pyplot as plt

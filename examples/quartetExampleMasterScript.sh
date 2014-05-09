@@ -11,7 +11,6 @@ if [ "$?" -ne "0" ];then echo "Problem running examples!"; fi
 
 ls inputAndOutput/treeset2/*.blink.00*.boot.tre | $SCRIPTDIR/dendropyScoreTriples.py -o inputAndOutput/treeset2 --quartet-file quartetList
 if [ "$?" -ne "0" ];then echo "Problem running examples!"; fi
-
 mkdir -p figures
 
 #pass the corresponding quartet output files from each of the two output directories to the plotting
@@ -24,7 +23,7 @@ do
     if [ "$?" -ne "0" ];then echo "Problem running examples!"; fi
 
     #plot flux diagrams of comparison of pairs of treatments
-    ../scripts/calculateFlux.py treeset1/$QUART treeset2/$QUART | ../scripts/plotFlux.py -o figures/$QUART.flux.pdf
+    ../scripts/calculateFlux.py inputAndOutput/treeset1/$QUART inputAndOutput/treeset2/$QUART | ../scripts/plotFlux.py -o figures/$QUART.flux.pdf
     if [ "$?" -ne "0" ];then echo "Problem running examples!"; fi
 done
 

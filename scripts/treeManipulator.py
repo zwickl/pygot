@@ -4,6 +4,7 @@ import sys
 import re
 import argparse
 from itertools import izip_longest
+from random import sample
 import dendropy
 
 def check_for_polytomies(tree):
@@ -49,6 +50,10 @@ formatArgs.add_argument('--rooting-comment', action='store_true', default=None,
 formatArgs.add_argument('--retain-comments', action='store_true', default=False, 
                     help='output any comments (besides rooting) that might have appeared with a tree (default False)')
 
+formatArgs.add_argument('--scale-by', default=None, type=float,
+                    help='scale branchlengths by this value before tree output')
+
+
 filterArgs = parser.add_argument_group('ARGUMENTS FOR TREE FILTERING/MANIPULATION')
 
 mut_group2 = filterArgs.add_mutually_exclusive_group()
@@ -61,6 +66,12 @@ mut_group2.add_argument('-np', '--no-polytomies', action='store_true', default=F
 
 mut_group2.add_argument('--make-bifurcating', action='store_true', default=False, 
                     help='randomly resolve polytomous nodes with zero-length branches, meaning that all trees will be output and will be bifurcating (default False)')
+
+'''
+Haven't implemented this yet
+mut_group2.add_argument('--all-resolutions', action='store_true', default=False, 
+                    help='return all bifurcating resolutions of a single polytomous input tree')
+'''
 
 mut_group3 = filterArgs.add_mutually_exclusive_group()
 
@@ -75,6 +86,10 @@ filterArgs.add_argument('-p', '--prune-patterns', action='append', default=None,
 
 filterArgs.add_argument('--max-trees', type=int, default=None,
                     help='only output the first --max-trees trees that match other filtering criteria')
+
+parser.add_argument('--subsample', type=int, default=None, 
+                    help='subsample the specified number of trees from the total number that match other filtering criteria')
+
 
 privateArgs = parser.add_argument_group('PRIVATE FUNCTIONS (END USERS HAVE NO REASON TO USE THESE)')
 
@@ -121,6 +136,9 @@ outtrees = dendropy.TreeList()
 ignoredCount = 0
 outgroupIgnoredCount = 0
 madeBifurcating = 0
+#the treefiles here are only used for --output-seq-lengths mode, which requires one tree per
+#file, and are otherwise ignored. If ignored there may be more trees than treefiles, hence the
+#izip_longest
 for intree, treefile in izip_longest(intrees, options.treefiles):
     hasPoly = check_for_polytomies(intree)
     if options.no_bifurcating and not hasPoly:
@@ -143,7 +161,6 @@ for intree, treefile in izip_longest(intrees, options.treefiles):
                         to_remove.add(l.taxon.label)
                         break
             to_retain = set(l.taxon.label for l in leaves) - to_remove
-            #intree.retain_taxa_with_labels(labels=to_retain)
             intree.prune_taxa_with_labels(labels=to_remove)
             #these are called on TreeLists - not sure if applicable here
             intree.taxon_set = intree.infer_taxa()
@@ -178,6 +195,7 @@ for intree, treefile in izip_longest(intrees, options.treefiles):
             treefiles.append(treefile)
 
 if options.prune_to_common_taxa:
+    #remove all taxa that don't appear in all trees
     common_taxon_labels = set(l.taxon.label for l in outtrees[0].leaf_nodes())
     for tree in outtrees[1:]:
         common_taxon_labels &= set(l.taxon.label for l in tree.leaf_nodes())
@@ -194,6 +212,7 @@ if options.prune_to_common_taxa:
     outtrees.taxon_set = outtrees[0].taxon_set
 
 elif options.only_all_taxa:
+    #only keep trees that contain all taxa observed in any tree
     all_taxon_labels = set()
     for tree in outtrees:
         all_taxon_labels |= set(l.taxon.label for l in tree.leaf_nodes())
@@ -203,6 +222,8 @@ elif options.only_all_taxa:
         if set(l.taxon.label for l in tree.leaf_nodes()) == all_taxon_labels:
             finalSet.append(tree)
 
+    if len(finalSet) == 0:
+        sys.exit('No trees contain all taxa! ("%s")' % '", "'.join(all_taxon_labels))
     log.write('ignoring %d trees without all taxa\n' % (len(outtrees) - len(finalSet)))
 
     outtrees = finalSet
@@ -216,7 +237,18 @@ if madeBifurcating > 0:
 
 if outtrees:
     if options.max_trees:
+        if options.subsample:
+            sys.exit('can\'t specify both --max-trees and --subsample')
         outtrees[options.max_trees:] = []
+
+    if options.subsample:
+        outtrees = dendropy.TreeList(sample(outtrees, options.subsample))
+        
+    if options.scale_by:
+        log.write('rescaling branch lengths by %f\n' % options.scale_by)
+        for t in outtrees:
+            t.scale_edges(options.scale_by)
+    
     log.write('writing %d trees\n' % len(outtrees))
     
     if options.rooting_comment is None:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import sys
-
+import random
 
 class locus_support_details(object):
     '''The basic details of the results of a particular locus (alignment) tree search for a particular triplet + outgroup of 
@@ -129,7 +129,7 @@ class triplet_support_details(list):
         return runs
 
     def shuffle(self):
-        np.random.shuffle(self)
+        random.shuffle(self)
 
     def supported_tree_counts(self):
         return [ len([loc for loc in self if loc.supported_tree_num == tnum]) for tnum in [ 0, 1, 2, -1 ] ]
@@ -137,6 +137,47 @@ class triplet_support_details(list):
     def supported_tree_proportions(self):
         if self:
             return [ supp / float(len(self)) for supp in self.supported_tree_counts() ]
+        else:
+            return [ 0.0, 0.0, 0.0 ]
+
+    def windowed_tree_counts(self, window_size, window_stride, taxon=0):
+        largest_coordinate = max([locus.taxon_locus_coordinate_list[taxon] for locus in self])
+        return [ self.extract_loci_in_coordinate_window(start, start + window_size, taxon).supported_tree_counts() for start in xrange(1, largest_coordinate + 1, window_stride) ]
+
+    def windowed_tree_proportions(self, window_size, window_stride, taxon=0):
+        largest_coordinate = max([locus.taxon_locus_coordinate_list[taxon] for locus in self])
+        return [ self.extract_loci_in_coordinate_window(start, start + window_size, taxon).supported_tree_proportions() for start in xrange(1, largest_coordinate + 1, window_stride) ]
+
+    def count_adjacent_tree_matches(self):
+        return sum( [self[num].supported_tree_num == self[num + 1].supported_tree_num for num in xrange(len(self) - 1)] )
+
+    def match_distance_tuples(self, taxon=0):
+        return [ (self[num].supported_tree_num == self[num + 1].supported_tree_num, self[num + 1].taxon_locus_coordinate_list[taxon] - self[num].taxon_locus_coordinate_list[taxon]) for num in xrange(len(self) - 1)] 
+
+    def max_coordinate(self, taxon=0):
+        return max(locus.taxon_locus_coordinate_list[taxon] for locus in self)
+
+    def support_mean(self, topology=0, informative_only=True, only_if_topology_preferred=False):
+        if informative_only:
+            loci = self.extract_informative_loci()
+        else:
+            loci = self
+        if only_if_topology_preferred:
+            sublist = [locus.support_value_list[topology] for locus in loci if locus.supported_tree_num == topology]
+            return sum(sublist) / float(len(sublist))
+        else:
+            return sum([locus.support_value_list[topology] for locus in loci]) / float(len(loci))
+
+    def support_sum(self, topology=0, informative_only=True, only_if_topology_preferred=False):
+        if informative_only:
+            loci = self.extract_informative_loci()
+        else:
+            loci = self
+        if only_if_topology_preferred:
+            sublist = [locus.support_value_list[topology] for locus in loci if locus.supported_tree_num == topology]
+            return sum(sublist)
+        else:
+            return sum([locus.support_value_list[topology] for locus in loci])
 
     def __repr__(self):
         outstr = ''

@@ -131,7 +131,8 @@ def combine_components(seedComp, min_components=1, max_components=20, criterion=
     returned list to make unique.
     '''
     seedLevel = len(seedComp) 
-    if seedLevel < min_components:        return []
+    if seedLevel < min_components:        
+        return []
     elif seedLevel == min_components:
         return [seedComp]
 
@@ -141,7 +142,6 @@ def combine_components(seedComp, min_components=1, max_components=20, criterion=
         for num1 in xrange(seedLevel - 1):
             for num2 in xrange(num1 + 1, seedLevel):
                 if not criterion or criterion(seedComp[num1], seedComp[num2]):
-                    #print seedComp[num1], seedComp[num2]
                     newList = list(seedComp)
                     newItem = [newList.pop(num2), newList.pop(num1)]
                     newList.append(tuple(sorted(newItem)))
@@ -168,8 +168,6 @@ def combine_components_and_uniqueify(seedComponents, min_components=3, max_compo
 
     return compSet
 
-
-
 def proportion_type(string):
     '''This is used for type and bound checking, specified as a type= argument in argparse.add_argument().
     It would be nice to be able to pass as specific range besides 0.0-1.0, but funcs used for type= can 
@@ -188,6 +186,32 @@ def proportion_type(string):
         mess = 'value %f must be between %.2f and %.2f' % (value, min_val, max_val)
         raise ArgumentTypeError(mess)
     return value
+
+
+def argparse_bounded_float(min_val=0.0, max_val=1.0):
+    '''Closure-based function for use in type and bound checking, specified as a type= argument in argparse.add_argument().
+    It defaults to checking for a proportion, but any bounds can be passed.
+    On failure raises an ArgumentTypeError, defined by argparse.
+    >>> f = argparse_bounded_float()
+    >>> f(1.0)
+    1.0
+    >>> f = argparse_bounded_float()
+    >>> f('1.1')
+    Traceback (most recent call last):
+    ...
+    ArgumentTypeError: value 1.100000 must be between 0.00 and 1.00
+    >>> f = argparse_bounded_float(max_val=2.0)
+    >>> f('1.9')
+    1.9
+    '''
+    def func(string):
+        value = float(string)
+        if value < min_val or value > max_val:
+            mess = 'value %f must be between %.2f and %.2f' % (value, min_val, max_val)
+            raise ArgumentTypeError(mess)
+        return value
+    
+    return func
 
 
 class BarebonesArgumentParser(ArgumentParser):
@@ -317,6 +341,7 @@ class CoordinateSet(object):
                 self.seqCoords[taxon] = int(coord)
         else:
             print self.seqCoords
+            #raise RuntimeError
             sys.exit("trying to assign coordinate to unknown taxon: %s" % taxon)
 
     def set_filename(self, name):
@@ -1348,8 +1373,8 @@ class Oryza(object):
         #self.short_names = [ 'OsatjAA', 'OsatiAA', 'ObartAA', 'ObracFF', 'OglabAA', 'OglaFAA', 'OglaMAA', 'OglumAA', 'OmeriAA', 'OminuBB', 'OminuCC', 'OnivaAA', 'OoffiCC', 'OpuncBB', 'OrufiAA' ]
         #self.taxon_names = [ 'O. barthii AA', 'O. brachyantha FF', 'O. glaberrima AA', 'O. glaberrimaF AA', 'O. glaberrimaM AA', 'O. glumaepatula AA', 'O. meridionalis AA', 'O. minuta BB', 'O. minuta CC', 'O. nivara AA', 'O. officinalis CC', 'O. punctata BB', 'O. rufipogon AA', 'O. sativai AA', 'O. sativaj AA' ]
         #self.short_names = [ 'ObartAA', 'ObracFF', 'OglabAA', 'OglaFAA', 'OglaMAA', 'OglumAA', 'OmeriAA', 'OminuBB', 'OminuCC', 'OnivaAA', 'OoffiCC', 'OpuncBB', 'OrufiAA', 'OsatiAA', 'OsatjAA' ]
-        self.taxon_names = [ 'L. perrii', 'O. barthii AA', 'O. brachyantha FF', 'O. glaberrima AA', 'O. glaberrimaF AA', 'O. glaberrimaM AA', 'O. glumaepatula AA', 'O. granulata GG', 'O. longistaminata AA', 'O. meridionalis AA', 'O. minuta BB', 'O. minuta CC', 'O. nivara AA', 'O. officinalis CC', 'O. punctata BB', 'O. rufipogon AA', 'O. sativai AA', 'O. sativaj AA' ]
-        self.short_names = [ 'Lperr', 'ObartAA', 'ObracFF', 'OglabAA', 'OglaFAA', 'OglaMAA', 'OglumAA', 'OgranGG', 'OlongAA', 'OmeriAA', 'OminuBB', 'OminuCC', 'OnivaAA', 'OoffiCC', 'OpuncBB', 'OrufiAA', 'OsatiAA', 'OsatjAA' ]
+        self.taxon_names = [ 'L. perrii', 'O. barthii AA', 'O. brachyantha FF', 'O. glaberrima AA', 'O. glaberrimaF AA', 'O. glaberrimaM AA', 'O. glumaepatula AA', 'O. granulata GG', 'O. longistaminata AA', 'O. meridionalis AA', 'O. minuta BB', 'O. minuta CC', 'O. nivara AA', 'O. officinalis CC', 'O. punctata BB', 'O. rufipogon AA', 'O. sativai AA', 'O. sativaj AA', 'O. rufipogonFull AA' ]
+        self.short_names = [ 'Lperr', 'ObartAA', 'ObracFF', 'OglabAA', 'OglaFAA', 'OglaMAA', 'OglumAA', 'OgranGG', 'OlongAA', 'OmeriAA', 'OminuBB', 'OminuCC', 'OnivaAA', 'OoffiCC', 'OpuncBB', 'OrufiAA', 'OsatiAA', 'OsatjAA', 'OrufFAA' ]
         self.short_to_long = dict( [ (self.short_names[n], self.taxon_names[n]) for n in range(0, len(self.taxon_names)) ])
         self.long_to_short = dict( [ (self.taxon_names[n], self.short_names[n]) for n in range(0, len(self.taxon_names)) ])
 

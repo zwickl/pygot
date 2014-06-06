@@ -5,7 +5,7 @@ from collections import Counter
 from argparse import ArgumentParser
 
 from pygot.utils import extract_sequences_and_stuff_from_nexus_file
-from pygot.utils import proportion_type
+from pygot.utils import argparse_bounded_float
 
 
 #if __name__ == '__main__':
@@ -26,10 +26,10 @@ parser.add_argument('-mtc', '--min-tax-in-column', type=int, default=4,
 parser.add_argument('-l', '--region-length', type=int, default=10,
                     help='length of poorly aligned run to screen for (default 10)')
 
-parser.add_argument('-c', '--consensus-proportion', type=proportion_type, default=0.5,
+parser.add_argument('-c', '--consensus-proportion', type=argparse_bounded_float(0.0, 1.0), default=0.5,
                     help='proportion of non-ambiguous bases in a column that must have the same state for the column to be considered (must be GREATER THAN this value, default 0.5)')
 
-parser.add_argument('-m', '--mismatch-proportion', type=proportion_type, default=0.5,
+parser.add_argument('-m', '--mismatch-proportion', type=argparse_bounded_float(0.0, 1.0), default=0.5,
                     help='min proportion of region that does not match consensus to be considered poorly aligned (default 0.5)')
 
 parser.add_argument('--out-summary-file', type=str, default=None, 
@@ -42,8 +42,8 @@ parser.add_argument('--ignore-patterns', action='append', default=[],
                     help='regex patterns matching taxon names to ignore when masking alignment (can appear multiple times)')
 
 #variable number of arguments
-parser.add_argument('filenames', nargs='*', default=[], 
-                    help='a list of NEXUS filenames to search (none for stdin)')
+parser.add_argument('filenames', nargs='+', default=[], 
+                    help='a list of NEXUS filenames to search')
 
 #now process the command line
 options = parser.parse_args()

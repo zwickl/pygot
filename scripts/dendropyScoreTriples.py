@@ -102,15 +102,20 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
         
         #using my derived Treelist is necessary below when testing bipartitions
         #make a treelist for each treefile, which might contain only one tree
+        allTreesPerTreefile = []
         for form in formats:
             try:
                 if chunkStart == 0:
-                    sys.stdout.write('attempting to read tree files in %s format ...\n' % form)
+                    sys.stdout.write('attempting to read tree files in %s format ...' % form)
                 allTreesPerTreefile = [ CustomTreeList.get_from_path(f, form) for f in treefileSubList ]
                 #now we know what the format is, and don't need to try on the next chunk
                 formats = [form]
+                if chunkStart == 0:
+                    sys.stdout.write(' succeeded.\n')
                 break
             except:
+                if chunkStart == 0:
+                    sys.stdout.write(' failed.\n')
                 pass
 
         '''
@@ -125,7 +130,8 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
         '''
 
         if not allTreesPerTreefile:
-            sys.exit("read no trees!")
+            sys.stdout.write('No trees could be read!\n')
+            sys.exit()
 
         #loop over the desired quartets to test
         sys.stdout.write("processing ...\n")
@@ -306,7 +312,7 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
         if os.stat(outfilename).st_size == 0:
             #this is kind of cheesy, but it's easier to just create the potential output file above and
             #then remove it if nothing was written to it
-            sys.stdout('no trees found containing quartet %s found\n' % requiredLabels)
+            sys.stdout.write('no trees found containing quartet %s found\n' % requiredLabels)
             os.remove(outfilename)
         else:
             if write_trees:

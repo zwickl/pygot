@@ -19,11 +19,13 @@ def check_for_polytomies(tree):
 
 parser = argparse.ArgumentParser(description='Read trees from one or many treefiles in nexus or newick format, manipulate or filter, and write to a new treefile')
 
-parser.add_argument('treefiles', nargs='*', default=[], help='nexus treefile(s) to convert (omit for stdin)')
+parser.add_argument('treefiles', nargs='*', default=[], help='nexus or newick treefile(s) to convert (omit for stdin)')
+
+parser.add_argument('--ignore-read-errors', action='store_true', default=False, 
+                    help='ignore treefiles that cannot be read properly (default False)')
 
 parser.add_argument('-o', '--outfile', default=None, 
                     help='file to write output to (default is stdout)')
-
 
 rootingArgs = parser.add_argument_group('ARGUMENTS FOR REORIENTING TREES')
 
@@ -117,6 +119,18 @@ else:
             intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus"))
         except dendropy.error.DataError:
             intrees.extend(dendropy.TreeList.get_from_path(tf, "newick"))
+        except ValueError:
+            sys.stderr.write('NOTE: ValueError reading from file %s, ' % tf)
+            if options.ignore_read_errors:
+                sys.stderr.write('ignoring file')
+            else:
+                sys.exit('exiting (use --ignore-read-errors to ignore this error)')
+        except AttributeError:
+            sys.stderr.write('NOTE: AttributeError reading from file %s, ' % tf)
+            if options.ignore_read_errors:
+                sys.stderr.write('ignoring file')
+            else:
+                sys.exit('exiting (use --ignore-read-errors to ignore this error)')
 
 sys.stderr.write('read %d trees\n' % len(intrees))
 

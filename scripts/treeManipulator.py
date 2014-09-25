@@ -56,6 +56,9 @@ formatArgs.add_argument('--retain-comments', action='store_true', default=False,
 formatArgs.add_argument('--scale-by', default=None, type=float,
                     help='scale branchlengths by this value before tree output')
 
+formatArgs.add_argument('--collapse-edges', default=None, type=float,
+                    help='collapse all edges less than or equal to the specified length')
+
 
 filterArgs = parser.add_argument_group('ARGUMENTS FOR TREE FILTERING/MANIPULATION')
 
@@ -259,6 +262,16 @@ if outtrees:
     if options.subsample:
         outtrees = dendropy.TreeList(sample(outtrees, options.subsample))
         
+    if options.collapse_edges:
+        log.write('collaping edges with length <= %g\n' % options.collapse_edges)
+        #collapse_unweighted_edges should do this, but there is a bug in the version I'm currently using
+        #so, this is a local reimplementation of a Tree function
+        for t in outtrees:
+            for e in t.postorder_edge_iter():
+                if not e.is_terminal():
+                    if e.length <= options.collapse_edges:
+                        e.collapse()
+
     if options.scale_by:
         log.write('rescaling branch lengths by %f\n' % options.scale_by)
         for t in outtrees:

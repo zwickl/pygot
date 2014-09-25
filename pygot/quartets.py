@@ -2,6 +2,7 @@
 import sys
 import random
 
+
 class locus_support_details(object):
     '''The basic details of the results of a particular locus (alignment) tree search for a particular triplet + outgroup of 
     taxa.  i.e., one line from the old table format
@@ -32,7 +33,7 @@ class locus_support_details(object):
         if support_sum:
             self.rescaled_support_value_list = [ val / support_sum for val in self.support_value_list if support_sum ]
         else:
-            self.rescaled_support_value_list = [ 1.0/3.0 for _ in self.support_value_list ]
+            self.rescaled_support_value_list = [ 1.0 / 3.0 for _ in self.support_value_list ]
 
         self.taxon_locus_coordinate_list = [ int(val) for val in taxon_locus_coordinate_list ]
         self.taxon_locus_order_list = [ int(val) for val in taxon_locus_order_list ]
@@ -73,11 +74,24 @@ class triplet_support_details(list):
             locus_list = [ locus_support_details(line[0], line[1:4], line[7:11], line[11:15]) for line in inLines ]
         self.extend(locus_list or []) 
 
+    def __getslice__(self, i, j):
+        #this is some esoteric stuff needed for slicing in addition to __getitem__
+        return triplet_support_details(self[max(0, i):max(0, j):])
+        #return slice(max(0, i), max(0, j))
+
+    '''
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            return triplet_support_details( [self[i] for i in xrange(*key.indices(len(self)))] )
+        else:
+            return self[key]
+    '''
+
     def coordinate_sort(self, taxon=0):
-        self.sort(key=lambda loc:loc.taxon_locus_coordinate_list[taxon])
+        self.sort(key=lambda loc: loc.taxon_locus_coordinate_list[taxon])
 
     def order_sort(self, taxon=0):
-        self.sort(key=lambda loc:loc.taxon_locus_order_list[taxon])
+        self.sort(key=lambda loc: loc.taxon_locus_order_list[taxon])
 
     def tree_num_list(self):
         return [ loc.supported_tree_num for loc in self ]

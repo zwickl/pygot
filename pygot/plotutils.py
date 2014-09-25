@@ -2,7 +2,7 @@
 import sys
 from os import path
 import re
-from itertools import izip,  cycle, chain, repeat, islice
+from itertools import izip, cycle, chain, repeat, islice
 import argparse 
 from math import ceil
 
@@ -14,6 +14,7 @@ except ImportError:
 
 from pygot.utils import flatten_array, linspace, find_shortest_unique_leading_substrings
 
+
 def padded(toPad, n, fillvalue=None):
     '''return an iterator of n elements, either slicing toPad or padding it
     >>> [ e for e in padded((1, 2, 3), 2) ]
@@ -22,7 +23,7 @@ def padded(toPad, n, fillvalue=None):
     [1, 2, 3, 0]
     '''
     padNum = n - len(toPad)
-    if padNum <= 0 :
+    if padNum <= 0:
         return islice(toPad, n)
     return chain(toPad, repeat(fillvalue, padNum))
 
@@ -38,7 +39,7 @@ def cycle_n_elements(toCycle, n):
     return iter(el for el, _ in izip(cycle(toCycle), xrange(n)))
 
 
-def cycle_n_elements_m_times(toCycle, n , m):
+def cycle_n_elements_m_times(toCycle, n, m):
     '''this is confusing - repeat the following m times, chaining into a single iterable:
     draw n items from toCycle, cycling if n > len(toCycle)
     (see cycle_n_elements)
@@ -375,7 +376,7 @@ def filename_to_paren_trees(s, oryza=False):
         sp = sp[-1]
         sp = sp.split('.')
         
-        nameMap = {'sativaj':'J', 'sativai':'I'}
+        nameMap = {'sativaj': 'J', 'sativai': 'I'}
         first = nameMap.get(sp[0].lower(), sp[0][0].upper())
 
         if 'punc' in sp[1].lower() and not 'brach' in s.lower():
@@ -408,8 +409,6 @@ def filename_to_paren_trees(s, oryza=False):
                 '(%s,%s,%s,%s)' % (first, sec, third, fourth) ]
 
     return paren
-
-
 
 
 def prepare_plot_kwargs(kwargDict, optionList, fontscaler=1.0):
@@ -657,7 +656,6 @@ class PlottingArgumentParser(argparse.ArgumentParser):
                 'defaultTkGui': False
                 }
 
-        
         #this just pulls out and removes any kwargs matching the keys for the defaults defined above, 
         #and then passes any remaining on to the base __init__
         reduced_kwargs = dict(kwargs)
@@ -864,7 +862,7 @@ class PlottingArgumentParser(argparse.ArgumentParser):
         if 'defaultDataColumnFunc' in option_defaults:
             dataArgs.add_argument('--data-column-func', nargs='*', type=str, default=option_defaults['defaultDataColumnFunc'],
                                 help='functions to select or convert column(s) in datafiles to a plotable series for pyplot.plot. \
-                                To plot a single series of only x values, something like \'lambda rows:([float(r[1]) - float(r[3]) for r in rows])\'\
+                                To plot a single series of only x values, something like \'lambda rows: ([float(r[1]) - float(r[3]) for r in rows])\'\
                                 will work.  To plot x-y points, \'lambda rows: ([float(r[1]) for r in rows], [float(r[3])/float(r[2]) for r in rows])\'\
                                 Multiple functions can be used, in which case each is applied to each datafile.')
         
@@ -965,7 +963,7 @@ def prepare_all_kwargs(opt):
     
     allKwargDict['subplotKwargs'] = prepare_plot_kwargs(opt.subplot_kwargs, [])
     
-    allKwargDict['xLabelKwargs'], allKwargDict['yLabelKwargs'] = [ prepare_plot_kwargs(kw,  [('size', opt.axis_label_fontsize)]) for kw in [opt.x_label_kwargs, opt.y_label_kwargs ] ]
+    allKwargDict['xLabelKwargs'], allKwargDict['yLabelKwargs'] = [ prepare_plot_kwargs(kw, [('size', opt.axis_label_fontsize)]) for kw in [opt.x_label_kwargs, opt.y_label_kwargs ] ]
     
     #various kwargs
     allKwargDict['titleKwargs'] = prepare_plot_kwargs(opt.title_kwargs, 
@@ -1132,7 +1130,7 @@ def full_plot_routine(opt, fileData):
             colorValuesToIterate = chain.from_iterable( [ [color] * numFuncs for color in cycle_n_elements(opt.color_values or opt.grey_values, numFiles) ] )
             hatchesToIterate = chain.from_iterable( [ [hatch] * numFuncs for hatch in cycle_n_elements(opt.patterns or [''], numFiles) ] )
             seriesNamesToIterate = padded(opt.series_names or [], numSeries, '_nolegend_')  
-
+        
         '''
         print len([ d for d in axesToIterate]), 
         print len([ d for d in dataToIterate]),
@@ -1232,7 +1230,7 @@ def full_plot_routine(opt, fileData):
         #if they are integers.  So, this checks whether the numbers are actually all ints, and if so ensures that
         #that are printed as such.
         def equal_float(a, b):
-            return abs(a-b) <= sys.float_info.epsilon
+            return abs(a - b) <= sys.float_info.epsilon
 
         ytick_locs = subplot.get_yticks()
         for num, loc in enumerate(ytick_locs):
@@ -1246,7 +1244,6 @@ def full_plot_routine(opt, fileData):
         #subplot.set_yticklabels(subplot.get_yticks(), **allKwargDict['yTickLabelKwargs'])
         ###########################################################################################
 
-
         #change tick properties
         if allKwargDict['tickKwargs']:
             subplot.tick_params(**allKwargDict['tickKwargs'])
@@ -1259,16 +1256,17 @@ def full_plot_routine(opt, fileData):
         #print series
         dataFunc = eval(function)
         toPlot = dataFunc(series)
-        #print toPlot
+        print toPlot
         '''to plot just x values, lambda looks like this:
-        lambda rows:[float(r[2]) for r in rows]
+        lambda rows: [float(r[2]) for r in rows]
         i.e., output is [x1, x2, ...]
         for x,y, like this:
-        lambda rows:([float(r[2]) for r in rows], [float(r[3]) for r in rows])
+        lambda rows: ([float(r[2]) for r in rows], [float(r[3]) for r in rows])
         but, the plot function wants [x1, x2, ...], [y1, y2, ...] as the first
         two arguments, hence the * to remove the tuple containing the two lists,
         which I think is required for the lambda'''
-        if isinstance(toPlot[0], list):
+        #if isinstance(toPlot[0], list):
+        if False:
             if (not hasattr(opt, 'histogram') or not opt.histogram) and (not hasattr(opt, 'bar_graph') or not opt.bar_graph):
                 subplot.plot(*dataFunc(series), 
                         marker=marker, 
@@ -1311,9 +1309,11 @@ def full_plot_routine(opt, fileData):
                     bins = linspace(opt.x_range[0] if opt.x_range else 0.0, opt.x_range[1] if opt.x_range else 1.0, opt.histogram_bins)
                     #bins = opt.histogram_bins
                     #rng = (opt.x_range[0] if opt.x_range else 0.0, opt.x_range[1] if opt.x_range else 1.0)
+                    
                     outN, outBins, patches = subplot.hist(dataFunc(series), 
                             bins=bins,
-                            facecolor=color,
+                            color=opt.color_values,
+                            label=opt.series_names,
                             normed=opt.normalize_histogram,
                             **allKwargDict['histogramKwargs'])
 

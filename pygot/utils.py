@@ -12,8 +12,8 @@ def linspace(a, b, n=100):
     '''mirrors numpy.linspace without depending on numpy'''
     if n < 2:
         return b
-    diff = (float(b) - a)/(n - 1)
-    return [diff * i + a  for i in range(n)]
+    diff = (float(b) - a) / (n - 1)
+    return [diff * i + a for i in range(n)]
 
 
 def flattened_array_generator(array, level=1, reverse=False):
@@ -26,7 +26,7 @@ def flattened_array_generator(array, level=1, reverse=False):
             if level == 0:
                 yield toplvl
             else:
-                for sub in flattened_array_generator(toplvl, level=level-1, reverse=reverse):
+                for sub in flattened_array_generator(toplvl, level=level - 1, reverse=reverse):
                     yield sub
     else:
         yield array
@@ -101,16 +101,6 @@ def find_shortest_unique_leading_substrings(string_list):
 
     return [ string.substr() for string in substrs ]
 
-    '''
-    for num1, num2 in itertools.combinations(nums):
-        first, sec = tuple_list[num1], tuple_list[num2]
-        while re.match(first[1], sec[1]) or re.match(sec[1], first[1]):
-            if re.match(first[1], sec[1]):
-                first[1] = 
-        first[1], sec[1] = 
-        while first[1] == sec[1]:
-    '''
-
 
 def arguments_not_list_or_tuple(one, two):
     '''This was a hack to ensure that only single taxa were combined, using combine_components, 
@@ -164,28 +154,9 @@ def combine_components_and_uniqueify(seedComponents, min_components=3, max_compo
     compSet = set(compTuples)
     compSet = list(compSet)
     #sort by resolvedness
-    compSet.sort(key=lambda t:len(t), reverse=True)
+    compSet.sort(key=lambda t: len(t), reverse=True)
 
     return compSet
-
-def proportion_type(string):
-    '''This is used for type and bound checking, specified as a type= argument in argparse.add_argument().
-    It would be nice to be able to pass as specific range besides 0.0-1.0, but funcs used for type= can 
-    only take 1 arg.
-    On failure raises an ArgumentTypeError, defined by argparse.
-    >>> proportion_type('1.0')
-    1.0
-    >>> proportion_type('1.1')
-    Traceback (most recent call last):
-    ...
-    ArgumentTypeError: value 1.100000 must be between 0.00 and 1.00
-    '''
-    min_val, max_val = 0.0, 1.0
-    value = float(string)
-    if value < min_val or value > max_val:
-        mess = 'value %f must be between %.2f and %.2f' % (value, min_val, max_val)
-        raise ArgumentTypeError(mess)
-    return value
 
 
 def argparse_bounded_float(min_val=0.0, max_val=1.0):
@@ -242,9 +213,6 @@ def read_from_file_or_pickle(filename, pickleName, readFunc, *readFuncArgs, **re
     other object.  Generators are not pickle-able, so this causes a problem.  Currently if the object returned
     from the parse is a generator, cast it as a list before pickling it.  For many cases this will be fine for 
     client code, but it obviously will not be ideal if the caller doesn't want the whole list in memory.
-    This is currently the caller's responsibility, and if they want a generator, don't use this function.  
-    For many cases this will be fine for client code, but it obviously will not be ideal if the caller 
-    doesn't want the whole list in memory.
     NOTE: This is currently the caller's responsibility, and if they want a generator, don't use this function.
     '''
     if path.exists(filename):
@@ -637,24 +605,34 @@ class BlinkCluster(object):
             raise StopIteration
         self.index += 1
         return result
+    
     def is_equalset(self, other):
         return self.member_set == other.member_set
+    
     def is_superset(self, other):
         return self.member_set.issuperset(other.member_set)
+    
     def is_subset(self, other):
         return self.member_set.issubset(other.member_set)
+    
     def member_union(self, other):
         return BlinkCluster(-1, list(self.member_set | other.member_set), dagLines=list(self.dag_line_set | other.dag_line_set))
+    
     def member_intersection(self, other):
         return BlinkCluster(-1, list(self.member_set & other.member_set), dagLines=list(self.dag_line_set & other.dag_line_set))
+    
     def member_difference(self, other):
         return BlinkCluster(-1, list(self.member_set - other.member_set), dagLines=list(self.dag_line_set - other.dag_line_set))
+    
     def __hash__(self):
         return hash(tuple(sorted(self.cluster_members)))
+    
     def __cmp__(self, other):
         return cmp(tuple(sorted(self.cluster_members)), tuple(sorted(other.cluster_members)))
+    
     def is_single_copy(self):
         return self.noDupes
+
 
 class SetOfClusters(object):
     def __init__(self, blink_clusters=None):
@@ -716,7 +694,7 @@ class SetOfClusters(object):
     
     def __str__(self):
         string = ''
-        for c in sorted(self.blink_clusters, key=lambda x:x.number):
+        for c in sorted(self.blink_clusters, key=lambda x: x.number):
             string += '%s' % c
         return string
 
@@ -776,6 +754,7 @@ class SetOfClusters(object):
 
         '''
 
+
 def parse_mcl_output(filename):
     '''read MCL output, which looks like the below, return a list of BlinkClusters
     output is simply one line per cluster:
@@ -792,6 +771,7 @@ def parse_mcl_output(filename):
         except:
             exit("problem converting mcl cluster to blink format")
     return allClusters
+
 
 def parse_blink_output(filename, dagline_dict=None):
     '''read blink output, which looks like the below, return a list of BlinkClusters
@@ -842,21 +822,22 @@ def blink_cluster_from_clique(thisClust, maxClique, mapping=None):
 '''
 '''
 def get_dagline_set_for_cluster(genes, daglineDoubleDict):
-	clustHits = set()
-	for tax1 in range(0, len(genes)):
-		try:
-			sub_dict = daglineDoubleDict[genes[tax1]]
-		except:
-			continue
-		for tax2 in range(0, len(genes)):
-			if tax1 != tax2:
-				try:
-					foundLine = sub_dict[genes[tax2]]
-					clustHits.add('\t'.join(foundLine))
-				except:
-					continue
-	return clustHits
+    clustHits = set()
+    for tax1 in range(0, len(genes)):
+        try:
+            sub_dict = daglineDoubleDict[genes[tax1]]
+        except:
+            continue
+        for tax2 in range(0, len(genes)):
+            if tax1 != tax2:
+                try:
+                    foundLine = sub_dict[genes[tax2]]
+                    clustHits.add('\t'.join(foundLine))
+                except:
+                    continue
+    return clustHits
 '''
+
 
 def get_dagline_set_for_cluster(genes, daglineDoubleDict):
     clustHits = set()
@@ -1225,7 +1206,7 @@ class ParsedSequenceDescription(object):
 
             self.various = make_dictionary_from_gff_arbitrary_field(split_gff[8])
 
-            if self.type in [ 'gene', 'mRNA' ] :
+            if self.type in [ 'gene', 'mRNA' ]:
                 if 'Alias' in self.various:
                     self.name = self.various['Alias']
                 elif 'Name' in self.various:

@@ -13,6 +13,7 @@ from pygot.utils import read_from_file_or_pickle
 
 #my extensions and functions for working with biopython objects
 
+
 class TaxonGenomicInformation:
     '''Stores correspondence between a set of sequences, a gff file referring to those 
     sequences and a corresponding toplevel assembly.  Some of these may be omitted.
@@ -166,7 +167,6 @@ class TaxonGenomicInformation:
                     else:
                         self.gff_feature_dict[g.id] = g
 
-
     def output(self):
         print '%s\t%d features\t%d dictFeatures\t%d sequences\t%d toplevel records' % (self.name, 
             len(self.gff_seqrecord_list), len(self.gff_feature_dict.keys()), len(self.seq_dict.keys()), len(self.toplevel_record_list))
@@ -187,6 +187,7 @@ class TaxonGenomicInformation:
 
 def instantiate_taxon_genomic_information(taxon, gff_filename, usePickle, toplevel_filename=None ):
     return TaxonGenomicInformation(taxon, gff_filename=gff_filename, toplevel_filename=toplevel_filename, usePickle=False)
+
 
 def get_taxon_genomic_information_dict(source, report=True, readToplevels=True, usePickle=False, useSMP=False):
     #file with lines containing short taxon identifiers, sequence files and gff files for 
@@ -242,7 +243,7 @@ def parse_feature_name(feature, errorIsFatal=True):
         if qual in feature.qualifiers:
             return feature.qualifiers[qual][0]
        
-    print feature
+    #print feature
     if errorIsFatal:
         raise Exception('unable to parse a feature name!:')
     else:
@@ -320,9 +321,9 @@ def extract_seqrecord_between_outer_cds(rec, ifeat):
         feat = copy.deepcopy(ifeat)
     
     if feat.strand == -1:
-        feat.sub_features.sort(key=lambda x:x.location.start, reverse=True)
+        feat.sub_features.sort(key=lambda x: x.location.start, reverse=True)
     else:
-        feat.sub_features.sort(key=lambda x:x.location.start)
+        feat.sub_features.sort(key=lambda x: x.location.start)
     
     '''
     print 'ORIGINAL FEAT'
@@ -450,7 +451,7 @@ def get_first_cds(feature):
 
 
 def sort_feature_list_by_id(recList):
-    recList.sort(key=lambda rec:rec.features[0].qualifiers['ID'])
+    recList.sort(key=lambda rec: rec.features[0].qualifiers['ID'])
 
 
 def sort_feature_list(recList):
@@ -463,7 +464,7 @@ def sort_feature_list(recList):
         if 'Alias' in recList[0].features[0].qualifiers:
             qual = 'Alias'
         try:
-            recList.sort(key=lambda rec:rec.features[0].qualifiers[qual])
+            recList.sort(key=lambda rec: rec.features[0].qualifiers[qual])
         except KeyError:
             sys.stderr.write('ERROR qualifier %s not found\n' % qual)
             for feat in recList.features:
@@ -476,7 +477,7 @@ def sort_feature_list(recList):
         if recList.features and 'Alias' in recList.features[0].qualifiers:
             qual = 'Alias'
         try:
-            recList.features.sort(key=lambda feat:feat.qualifiers[qual])
+            recList.features.sort(key=lambda feat: feat.qualifiers[qual])
         except KeyError:
             sys.stderr.write('ERROR qualifier %s not found\n' % qual)
             for feat in recList.features:
@@ -495,7 +496,7 @@ def sort_feature_list_by_coordinate(recList):
     #SeqRecords themselves don't have coords
     if isinstance(recList, list):
         try:
-            recList.sort(key=lambda rec:rec.features[0].location.start.position)
+            recList.sort(key=lambda rec: rec.features[0].location.start.position)
         except KeyError:
             sys.stderr.write('ERROR could not sort by coordinate')
             for feat in recList.features:
@@ -508,7 +509,7 @@ def sort_feature_list_by_coordinate(recList):
 
     elif isinstance(recList, SeqRecord):
         try:
-            recList.features.sort(key=lambda feat:feat.location.start.position)
+            recList.features.sort(key=lambda feat: feat.location.start.position)
         except KeyError:
             sys.stderr.write('ERROR could not sort by coordinate')
             for feat in recList.features:
@@ -519,7 +520,7 @@ def sort_feature_list_by_coordinate(recList):
         try:
             print recList
             exit()
-            recList.sub_features.sort(key=lambda feat:feat.location.start.position)
+            recList.sub_features.sort(key=lambda feat: feat.location.start.position)
         except KeyError:
             sys.stderr.write('ERROR could not sort by coordinate')
             for feat in recList.sub_features:
@@ -570,7 +571,7 @@ def get_features_by_name(feature, name):
         return [feature]
     featsToReturn = []
     for feat in flattened_subfeature_iterator(feature):
-        if feat.type.lower() == name :
+        if feat.type.lower() == name:
             featsToReturn.append(feat)
 
     '''

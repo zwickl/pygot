@@ -7,6 +7,7 @@ from itertools import izip_longest
 from random import sample
 import dendropy
 
+
 def check_for_polytomies(tree):
     '''Check for polytomies by looking for nodes with > 3 neighbors.'''
     for node in tree.postorder_node_iter():

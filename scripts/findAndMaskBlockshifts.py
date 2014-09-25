@@ -107,7 +107,7 @@ for nfile in options.filenames:
         otax = re.sub('[ ]', '_', tax)
         foundAt = -1
         for startIndex in xrange(seqLen - options.region_length):
-            window = mismatchList[startIndex:startIndex+options.region_length]
+            window = mismatchList[startIndex:startIndex + options.region_length]
             mismatchCount = sum(window)
             if options.debug:
                 sys.stderr.write('%s\t%d\t%d\t%s\n' % (tax, startIndex, mismatchCount, window))
@@ -144,7 +144,7 @@ for nfile in options.filenames:
             if not match:
                 for start, end in windows:
                     winLen = end - start + 1
-                    listSeq[start:end+1] = 'N' * winLen
+                    listSeq[start:end + 1] = 'N' * winLen
             outnex.write('%s %s\n' % (otax, ''.join(listSeq)))
         outnex.write(';\n%s' % ''.join(endLinesInNexus))
 

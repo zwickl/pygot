@@ -239,7 +239,6 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
                             fout.write('file\t%s\n' % ('\t'.join(t.as_newick_string() for t in possibleTrees)))
                         firstOfChunk = False
                     
-
                     fout.write("%s\t" % treefile)
 
                     if len(trees) > 1:
@@ -323,7 +322,7 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
                         tree.label = treeLists[num][tnum][0]
                     #quartTrees.write(open('.'.join([outfilename, str(num), 'tre']), 'w'), schema='nexus')
                     #this is hardcoded for oryza names at the moment
-                    stream = open(re.sub('dat', requiredLabels[0].split()[1] + '-' + requiredLabels[num+1].split()[1] + '.tre', outfilename), 'w')
+                    stream = open(re.sub('dat', requiredLabels[0].split()[1] + '-' + requiredLabels[num + 1].split()[1] + '.tre', outfilename), 'w')
                     tempTreeList.write(stream, schema='nexus')
                     #stream.write('\n'.join(treeLists[num]) + '\n')
                     #quartTrees.write(stream, schema='nexus')

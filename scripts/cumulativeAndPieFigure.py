@@ -43,6 +43,7 @@ def filename_to_triple_title(s, oryza=False):
 
     return title
 
+
 def filename_to_full_triple_title(s):
     sp = s.split('/')
     sp = sp[-1]
@@ -296,22 +297,19 @@ if use_tk_gui:
 else:
     options = parser.parse_args()
 
-if not options.outFile:
-    outFile = sys.stdout
-else:
-    outFile = options.outFile
+outFile = options.outFile or sys.stdout
 
 actualColors = options.color_values if options.color_values else options.grey_values
 
 figureData = []
 if not options.inFiles:
-    exit('must enter some input files with -i')
+    sys.exit('must enter some input files with -i')
 for num, f in enumerate(options.inFiles):
     if isinstance(f, str) and not path.exists(f):
         if options.missing_ok:
             sys.stderr.write('WARNING: input file %s missing!\n' % f)
         else:
-            exit('ERROR: input file %s missing!\n' % f)
+            sys.exit('ERROR: input file %s missing!\n' % f)
     else:
         sys.stderr.write('Reading file %s ...\n' % f)
         if options.titles:
@@ -325,8 +323,7 @@ numPlots = len(figureData)
 #now the plotting
 
 #don't make obviously empty plots
-if options.columns > numPlots:
-    options.columns = numPlots
+options.columns = min(options.columns, numPlots)
 
 #set up the individual plots and axes
 sys.stderr.write('Plotting ...\n')
@@ -390,7 +387,6 @@ fig.subplots_adjust(**subplotKwargs)
 #if only one subplot ax is a single axes object, otherwise a tuple of them
 #rather annoying
 #if rows and col > 1, ax will be a 2d array, so flatten
-#ax = np.ravel(ax) if isinstance(ax, collections.Iterable) else [ax]
 ax = flatten_array(ax) if isinstance(ax, collections.Iterable) else [ax]
 
 #if this isn't explicitly set it is figured out by pyplot and applied

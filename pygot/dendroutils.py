@@ -71,7 +71,7 @@ class CustomTreeList(dendropy.TreeList):
             targetSplit = self.taxon_set.get_taxa_bitmask(**kwargs)
             k = kwargs.values()[0]
             if dendropy.treesplit.count_bits(targetSplit) != len(k):
-                raise IndexError('Not all taxa could be mapped to split (%s): %s' \
+                raise IndexError('Not all taxa could be mapped to split (%s): %s' 
                     % (self.taxon_set.split_bitmask_string(targetSplit), k))
         found = 0
         total = 0
@@ -84,11 +84,11 @@ class CustomTreeList(dendropy.TreeList):
                 if not dendropy.treesplit.is_compatible(test_split, targetSplit, partialMask):
                     break
                 masked_test = (test_split & partialMask)
-                if targetSplit == masked_test or compSplit == masked_test :
+                if targetSplit == masked_test or compSplit == masked_test:
                     found += 1
                     break
 
-        return float(found)/total
+        return float(found) / total
 
     def masked_frequency_of_splitlist(self, returnMatches=False, **kwargs):
         """As masked_frequency_of_split, but counts trees that contain a list of splits.
@@ -116,7 +116,7 @@ class CustomTreeList(dendropy.TreeList):
             split = self.taxon_set.get_taxa_bitmask(**kwargs)
             k = kwargs.values()[0]
             if dendropy.treesplit.count_bits(split) != len(k):
-                raise IndexError('Not all taxa could be mapped to split (%s): %s' \
+                raise IndexError('Not all taxa could be mapped to split (%s): %s' 
                     % (self.taxon_set.split_bitmask_string(split), k))
 
         found = 0
@@ -150,9 +150,9 @@ class CustomTreeList(dendropy.TreeList):
                 if returnMatches:
                     matches.append(copy.deepcopy(tree))
         if returnMatches:
-            return float(found)/total, matches
+            return float(found) / total, matches
         else:
-            return float(found)/total
+            return float(found) / total
 
     def generate_all_trees_for_taxon_list(self, taxon_list, min_bipartitions=None, max_bipartitions=None, criterion=None):
         '''Will call functions to generate newick strings representing all possible trees for taxon set.  
@@ -191,8 +191,8 @@ class CustomTreeList(dendropy.TreeList):
         ntax = len(taxon_list)
 
         #default to fully resolved trees
-        min_bipartitions = max(min_bipartitions,  0) if min_bipartitions else ntax - 3
-        max_bipartitions = max(max_bipartitions,  ntax - 3) if max_bipartitions else ntax - 3
+        min_bipartitions = max(min_bipartitions, 0) if min_bipartitions else ntax - 3
+        max_bipartitions = max(max_bipartitions, ntax - 3) if max_bipartitions else ntax - 3
 
         componentLists = combine_components_and_uniqueify(taxon_list, min_components=ntax - max_bipartitions, max_components=ntax - min_bipartitions, criterion=criterion)
 
@@ -224,7 +224,6 @@ class CustomTreeList(dendropy.TreeList):
         if tree_list_name is None:
             tree_list_name = "tree_list_%s" % id(self)
 
-
         if self.label is not None:
             label = "'" + self.label + "'"
         else:
@@ -255,7 +254,7 @@ class CustomTreeList(dendropy.TreeList):
                 oid_str = ', oid="%s"' % taxon.oid
             else:
                 oid_str = ""
-            p.append("%s = %s.taxon_set.require_taxon(label=%s%s)" \
+            p.append("%s = %s.taxon_set.require_taxon(label=%s%s)" 
                 % (tobj_name,
                    tree_list_name,
                    label,
@@ -273,7 +272,7 @@ class CustomTreeList(dendropy.TreeList):
                 oid_str = ', oid="%s"' % tree.oid
             else:
                 oid_str = ""
-            p.append("%s = dendropy.Tree(label=%s, taxon_set=%s.taxon_set%s)" \
+            p.append("%s = dendropy.Tree(label=%s, taxon_set=%s.taxon_set%s)" 
                 % (tree_obj_name,
                    label,
                    tree_list_name,
@@ -310,4 +309,61 @@ class CustomTreeList(dendropy.TreeList):
                         p.append('%s.edge.oid = "%s"' % (node_obj_namer(child), child.edge.oid))
 
         return "\n".join(p)
+
+    '''
+    #haven't finished implmenting this yet
+    def resolve_polytomies(self, source_tree, update_splits=False, rng=None):
+        """
+        Arbitrarily resolve polytomies using 0-length splits.
+
+        If `rng` is an object with a sample() method then the polytomy will be
+            resolved by sequentially adding (generating all tree topologies
+            equiprobably
+            rng.sample() should behave like random.sample()
+        If `rng` is not passed in, then polytomy is broken deterministically by
+            repeatedly joining pairs of children.
+        """
+        polytomies = []
+        indeces = []
+        for node in self.postorder_node_iter():
+            nchild = len(node.child_nodes())
+            if nchild > 2:
+                polytomies.append(node)
+                indeces.append(range(nchild))
+
+        for node in polytomies:
+            children = node.child_nodes()
+            nc = len(children)
+            if nc > 2:
+                if rng:
+                    to_attach = children[2:]
+                    for child in to_attach:
+                        node.remove_child(child)
+                    attachment_points = children[:2] + [node]
+                    while len(to_attach) > 0:
+                        next_child = to_attach.pop()
+                        next_sib = rng.sample(attachment_points, 1)[0]
+                        next_attachment = Node()
+                        p = next_sib.parent_node
+                        p.add_child(next_attachment)
+                        p.remove_child(next_sib)
+                        next_attachment.add_child(next_sib)
+                        next_attachment.add_child(next_child)
+                        attachment_points.append(next_attachment)
+                else:
+                    while len(children) > 2:
+                        nn1 = Node()
+                        nn1.edge.length = 0
+                        c1 = children[0]
+                        c2 = children[1]
+                        node.remove_child(c1)
+                        node.remove_child(c2)
+                        nn1.add_child(c1)
+                        nn1.add_child(c2)
+                        node.add_child(nn1)
+                        children = node.child_nodes()
+        if update_splits:
+            self.update_splits()
+    '''
+
 

@@ -36,7 +36,7 @@ def sub_tuples(t1, t2):
 
 
 def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape='right', 
-        max_arrow_width=0.03, arrow_sep = 0.02, alpha=0.5, 
+        max_arrow_width=0.03, arrow_sep=0.02, alpha=0.5, 
         normalize_data=False, ec=None, labelcolor=None, 
         head_starts_at_zero=True, show_arrow_for_scale=False, 
         arrow_function=None, 
@@ -107,8 +107,8 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
     #as left, bottom, width, height
     axes_rect = (0.125, 0.1, 0.775, 0.8)
     ax = fig.add_axes(axes_rect, frameon=False,
-        xlim=(-0.5, edge + 1.0), \
-        ylim=(-0.5, (edge + 1.0) * sin(radians(60))), \
+        xlim=(-0.5, edge + 1.0), 
+        ylim=(-0.5, (edge + 1.0) * sin(radians(60))), 
         xticks=([]), yticks=([])
         )
 
@@ -120,7 +120,7 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
     
     #tuple of x, y for start position of arrows
     #gotten by taking location of U, 1, 2 or 3 and offsetting by some gap values depending on the direction of the arrow
-    arrow_origins = {\
+    arrow_origins = {
         'US': add_tuples(coordU, (-arrow_gap, arrow_offset_from_point)),
         'U1': add_tuples(coordU, (arrow_gap - diag_arrow_offset_from_point_large, -arrow_gap - diag_arrow_offset_from_point_small)),
         'U2': add_tuples(coordU, (arrow_gap + diag_arrow_offset_from_point_large, arrow_gap - diag_arrow_offset_from_point_small)),
@@ -144,7 +144,7 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
         colors = { st:'k' for st in states }
         colors.update({ tran:'k' for tran in transitions })
     else:
-        colors = {\
+        colors = {
             'U':'r',
             'S':'k',
             '1':'g',
@@ -164,7 +164,7 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
             }
 
     #alignment of arrow label text with respect to ???
-    label_positions = {\
+    label_positions = {
         'US':'center',
         'SU':'center',
         '1U':'center',
@@ -281,8 +281,7 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
 
         #set the length of the arrow
         if display == 'length':
-            length = max_head_length+(max_arrow_length-max_head_length)*\
-                state_and_transition_counts[pair]
+            length = max_head_length + (max_arrow_length - max_head_length) * state_and_transition_counts[pair]
         else:
             length = max_arrow_length
         #set the transparency of the arrow
@@ -322,8 +321,8 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
         #matplotlib.pyplot.arrow(x, y, dx, dy, hold=None, **kwargs)
         #Draws arrow on specified axis from (x, y) to (x + dx, y + dy)
         if countData[pair] > 0:
-            plt.arrow(x_pos, y_pos, x_scale*length, y_scale*length, \
-                fc=fc, ec=ec, alpha=alpha, width=width, head_width=head_width, \
+            plt.arrow(x_pos, y_pos, x_scale * length, y_scale * length, 
+                fc=fc, ec=ec, alpha=alpha, width=width, head_width=head_width, 
                 head_length=head_length, **arrow_params)
 
         label_text_size = 30
@@ -332,8 +331,8 @@ def make_arrow_plot(state_and_transition_counts, size=4, display='width', shape=
         #counts_to_show_text = 20
 
         if countData[pair] >= counts_to_show_text:
-            x, y = add_tuples((x_pos, y_pos), (x_scale*length*0.5, y_scale*length*0.5))
-            ax.text(x, y, '%d' % (countData[pair]), size=label_text_size, ha='center', va='center', weight='bold',\
+            x, y = add_tuples((x_pos, y_pos), (x_scale * length * 0.5, y_scale * length * 0.5))
+            ax.text(x, y, '%d' % (countData[pair]), size=label_text_size, ha='center', va='center', weight='bold',
                 color=labelcolor or fc)
     #####END OF EMBEDDED FUNCTION####
 
@@ -401,13 +400,13 @@ if __name__ == '__main__':
                 vals[16], vals[17], (vals[18], vals[19]) ]
 
     else:
-        leftCounts = [ sum([int(vals[el]) for el in xrange(s*4, s*4+4)]) for s in xrange(4) ]
+        leftCounts = [ sum([int(vals[el]) for el in xrange(s * 4, s * 4 + 4)]) for s in xrange(4) ]
         rightCounts = [ sum([int(vals[el]) for el in xrange(s, 16, 4)]) for s in xrange(4) ]
 
         for state in xrange(4):
-            vals[state + state*4] = ( leftCounts[state], rightCounts[state] )
+            vals[state + state * 4] = ( leftCounts[state], rightCounts[state] )
 
-    order =  ['U', 'US', 'U1', 'U2', 'SU', 'S', 'S1', 'S2', '1U', '1S', '1', '12', '2U', '2S', '21', '2']
+    order = ['U', 'US', 'U1', 'U2', 'SU', 'S', 'S1', 'S2', '1U', '1S', '1', '12', '2U', '2S', '21', '2']
 
     #whether to have an arrow indicating the scaling of arrow width to the left of the trianglular figure
     if options.scale_arrow:

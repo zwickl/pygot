@@ -41,9 +41,9 @@ easy_install setuptools
 Or you can just run things in the example directories, as demonstrated in the sample 
 scripts.  (although you'll need to install the below dependencies yourself)
 
-If you install it globally you may need to put the script install location into your PATH 
-environment variable, or copy the script files (in the scripts directory) somewhere else 
-in your path.
+If you install it globally you may need to put the script install location into your 
+PATH environment variable, or copy the script files (in the scripts directory) 
+somewhere else in your path.
 
 Dependencies:
 -The Dendropy library (http://pythonhosted.org/DendroPy/) is required for all quartet 

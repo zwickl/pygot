@@ -2,6 +2,12 @@
 import copy
 import dendropy
 
+#this deals with changes in DendroPy 4
+try:
+    from dendropy.calculate import treesplit
+except ImportError:
+    from dendropy import treesplit
+
 
 class CustomTree(dendropy.Tree):
     '''Override of denodropy.Tree, which redefines equality as an RF distance of 0.'''
@@ -70,18 +76,18 @@ class CustomTreeList(dendropy.TreeList):
         else:
             targetSplit = self.taxon_set.get_taxa_bitmask(**kwargs)
             k = kwargs.values()[0]
-            if dendropy.treesplit.count_bits(targetSplit) != len(k):
+            if treesplit.count_bits(targetSplit) != len(k):
                 raise IndexError('Not all taxa could be mapped to split (%s): %s' 
                     % (self.taxon_set.split_bitmask_string(targetSplit), k))
         found = 0
         total = 0
         for tree in self:
             if not hasattr(tree, "split_edges"):
-                dendropy.treesplit.encode_splits(tree)
+                treesplit.encode_splits(tree)
             total += 1
             compSplit = (~targetSplit & partialMask)
             for test_split in tree.split_edges:
-                if not dendropy.treesplit.is_compatible(test_split, targetSplit, partialMask):
+                if not treesplit.is_compatible(test_split, targetSplit, partialMask):
                     break
                 masked_test = (test_split & partialMask)
                 if targetSplit == masked_test or compSplit == masked_test:
@@ -115,7 +121,7 @@ class CustomTreeList(dendropy.TreeList):
         else:
             split = self.taxon_set.get_taxa_bitmask(**kwargs)
             k = kwargs.values()[0]
-            if dendropy.treesplit.count_bits(split) != len(k):
+            if treesplit.count_bits(split) != len(k):
                 raise IndexError('Not all taxa could be mapped to split (%s): %s' 
                     % (self.taxon_set.split_bitmask_string(split), k))
 
@@ -123,7 +129,7 @@ class CustomTreeList(dendropy.TreeList):
         total = 0
         for tnum, tree in enumerate(self):
             if not hasattr(tree, "split_edges"):
-                dendropy.treesplit.encode_splits(tree)
+                treesplit.encode_splits(tree)
             total += 1
             matchedSplits = 0
             incompatible = False
@@ -131,13 +137,14 @@ class CustomTreeList(dendropy.TreeList):
             for num, targetSplit in enumerate(targetSplits):
                 compSplit = (~targetSplit & partialMask)
                 #work through the splits in this tree
+                tree.encode_splits()
                 for test_split in tree.split_edges:
                     #mask out unimportant taxa
                     masked_test = (test_split & partialMask)
                     #don't need to test anything if masked_test is empty 
                     #(i.e., no taxa in partialMask appear on opposite sides of test_split
                     if masked_test:
-                        if not dendropy.treesplit.is_compatible(test_split, targetSplit, partialMask):
+                        if not treesplit.is_compatible(test_split, targetSplit, partialMask):
                             incompatible = True
                             break
                         elif targetSplit == masked_test or compSplit == masked_test:

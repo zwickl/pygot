@@ -7,6 +7,12 @@ from itertools import izip_longest
 from random import sample
 import dendropy
 
+#for dendropy 4 compatability
+try:
+    from dendropy.error import DataError
+except:
+    from dendropy.utility.error import DataError
+
 
 def check_for_polytomies(tree):
     '''Check for polytomies by looking for nodes with > 3 neighbors.'''
@@ -93,7 +99,7 @@ filterArgs.add_argument('-p', '--prune-patterns', action='append', default=None,
 filterArgs.add_argument('--max-trees', type=int, default=None,
                     help='only output the first --max-trees trees that match other filtering criteria')
 
-parser.add_argument('--subsample', type=int, default=None, 
+filterArgs.add_argument('--subsample', type=int, default=None, 
                     help='subsample the specified number of trees from the total number that match other filtering criteria')
 
 
@@ -113,7 +119,7 @@ if not options.treefiles:
     #try two input formats
     try:
         intrees.extend(dendropy.TreeList.get_from_string(trees, "nexus"))
-    except dendropy.error.DataError:
+    except DataError:
         intrees.extend(dendropy.TreeList.get_from_string(trees, "newick"))
 
 else:
@@ -121,7 +127,7 @@ else:
         #try two input formats
         try:
             intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus"))
-        except dendropy.error.DataError:
+        except DataError:
             intrees.extend(dendropy.TreeList.get_from_path(tf, "newick"))
         except ValueError:
             sys.stderr.write('NOTE: ValueError reading from file %s, ' % tf)

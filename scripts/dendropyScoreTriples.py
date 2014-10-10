@@ -168,6 +168,10 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
             firstOfChunk = True
             for (trees, treefile) in itertools.izip(allTreesPerTreefile, treefileSubList):
                 #verify that the correct taxa are present
+                #this aliases the function name (on the instance) to be compatible with the change to has_taxa_labels in DendroPy 4
+                if not hasattr(trees.taxon_set, 'has_taxa'):
+                    trees.taxon_set.has_taxa = trees.taxon_set.has_taxa_labels
+                
                 if trees.taxon_set.has_taxa(labels=requiredLabels):
                     numFound += 1
                     #masked = True

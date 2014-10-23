@@ -46,9 +46,15 @@ PATH environment variable, or copy the script files (in the scripts directory)
 somewhere else in your path.
 
 Dependencies:
--The Dendropy library (http://pythonhosted.org/DendroPy/) is required for all quartet 
-based summaries. The setup procedure above will attempt to install it for you if 
-necessary.
+-The excellent Dendropy library:
+
+Sukumaran J, Holder MT. 2010. DendroPy: a Python library for phylogenetic computing. 
+    Bioinformatics. 26(12):1569-1571.
+http://pythonhosted.org/DendroPy/
+
+is required for all quartet based summaries. The pygot setup procedure above will 
+attempt to install Dendropy for you if necessary.
+I highly recommend Dendropy for your phylogenetic computing needs!
 
 -The matplotlib library (http://matplotlib.org/) is required for making any figures.  
 This can be non-trivial to get installed, and downloading an installer package for 

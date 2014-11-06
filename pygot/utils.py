@@ -17,7 +17,11 @@ def linspace(a, b, n=100):
 
 
 def flattened_array_generator(array, level=1, reverse=False):
-    '''Generator to be used in flatten_array function, or by itself'''
+    '''Generator to be used in flatten_array function, or by itself.
+    Difference is that this doesn't create the flattended list, as
+    flatten_array does, it just yields elements as if it had.
+    Favor this in iteration, obviously.
+    '''
     if isinstance(array, Iterable) and not isinstance(array, str):
         if reverse:
             array = array[::-1]
@@ -183,6 +187,11 @@ def argparse_bounded_float(min_val=0.0, max_val=1.0):
         return value
     
     return func
+
+
+def proportion_type():
+    '''Limited version of argparse_bounded_float for compatibility with legacy code.'''
+    return argparse_bounded_float()
 
 
 class BarebonesArgumentParser(ArgumentParser):

@@ -36,6 +36,7 @@ else:
 from pygot.quartets import *
 from pygot import utils
 from pygot import dendroutils
+from pygot import tkinterutils
 #from pygot import biopyutils
 
 ###############################################################################

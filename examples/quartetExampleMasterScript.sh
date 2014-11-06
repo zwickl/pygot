@@ -12,8 +12,6 @@ if [ "$?" -ne "0" ];then echo "Problem running examples!"; quit; fi
 ls inputAndOutput/treeset2/*.blink.00*.boot.tre | $SCRIPTDIR/dendropyScoreTriples.py -o inputAndOutput/treeset2 --quartet-file quartetList
 if [ "$?" -ne "0" ];then echo "Problem running examples!"; quit; fi
 
-exit
-
 mkdir -p figures
 
 #pass the corresponding quartet output files from each of the two output directories to the plotting

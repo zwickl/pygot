@@ -137,7 +137,6 @@ class CustomTreeList(dendropy.TreeList):
             for num, targetSplit in enumerate(targetSplits):
                 compSplit = (~targetSplit & partialMask)
                 #work through the splits in this tree
-                tree.encode_splits()
                 for test_split in tree.split_edges:
                     #mask out unimportant taxa
                     masked_test = (test_split & partialMask)

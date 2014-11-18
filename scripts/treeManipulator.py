@@ -1,7 +1,9 @@
 #!/usr/bin/env python
-
 import sys
+import os
 import re
+import shlex
+import subprocess
 import argparse
 from itertools import izip_longest
 from random import sample
@@ -96,6 +98,12 @@ mut_group3.add_argument('--only-all-taxa', action='store_true', default=False,
 filterArgs.add_argument('-p', '--prune-patterns', action='append', default=None, 
                     help='regex patterns for taxon names to strip from trees before output.  Single pattern per flag, but can appear multiple times')
 
+filterArgs.add_argument('-f', '--pattern-file', default=None, type=str,
+                    help='read regex patterns from indicated file for taxon names to strip from trees before output')
+
+mut_group3.add_argument('--verbatim', action='store_true', default=False, 
+                    help='treat the --prune-patterns or patterns read from --pattern-file as exact taxon names rather than regex patterns')
+
 filterArgs.add_argument('--max-trees', type=int, default=None,
                     help='only output the first --max-trees trees that match other filtering criteria')
 
@@ -108,7 +116,41 @@ privateArgs = parser.add_argument_group('PRIVATE FUNCTIONS (END USERS HAVE NO RE
 privateArgs.add_argument('--output-seq-lengths', action='store_true', default=False, 
                     help='(private) very specialized function to extract and output sequence lengths from tree filenames. Assumes only one tree per file!')
 
-options = parser.parse_args()
+
+#if no arguments are passed, try to start the tkinter gui
+tk_root = None
+if len(sys.argv) == 1:
+    try:
+        from Tkinter import *
+        from pygot.tkinterutils import *
+        from ttk import *
+    except ImportError:
+        sys.stderr.write('%s\n' % parser.format_help())
+        sys.stderr.write('\nUnable to import GUI componenets.  Use command line options.\n\n'.upper())
+        sys.exit()
+
+    tk_root = Tk()
+    tk_gui = ArgparseGui(parser, tk_root, width=1152, height=720, output_frame=False, destroy_when_done=True)
+
+    #Need to do this on OS X to bring window to front, otherwise root.lift() should work
+    if 'darwin' in sys.platform.lower():
+        try:
+            #this can give odd non-critical error messages from the OS, so send stderr to devnull
+            retcode = subprocess.call(shlex.split('''/usr/bin/osascript -e 'tell app "Finder" to set frontmost of process "Python" to true' '''), stderr=open(os.devnull, 'wb'))
+        except:
+            #didn't manage to get window to front, but don't worry about it
+            pass
+    else:
+        tk_root.lift()
+   
+    #This will block until the window is destroyed by pressing Cancel or Done
+    tk_root.wait_window(tk_gui.frame)
+    if tk_gui.cancelled:
+        sys.exit('cancelled ...')
+    options = parser.parse_args(tk_gui.make_commandline_list())
+
+else:
+    options = parser.parse_args()
 
 intrees = dendropy.TreeList()
 if not options.treefiles:
@@ -118,17 +160,17 @@ if not options.treefiles:
     trees = sys.stdin.read()
     #try two input formats
     try:
-        intrees.extend(dendropy.TreeList.get_from_string(trees, "nexus"))
+        intrees.extend(dendropy.TreeList.get_from_string(trees, "nexus", case_sensitive_taxon_labels=True, preserve_underscores=True))
     except DataError:
-        intrees.extend(dendropy.TreeList.get_from_string(trees, "newick"))
+        intrees.extend(dendropy.TreeList.get_from_string(trees, "newick", case_sensitive_taxon_labels=True, preserve_underscores=True))
 
 else:
     for tf in options.treefiles:
         #try two input formats
         try:
-            intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus"))
+            intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus", case_sensitive_taxon_labels=True, preserve_underscores=True))
         except DataError:
-            intrees.extend(dendropy.TreeList.get_from_path(tf, "newick"))
+            intrees.extend(dendropy.TreeList.get_from_path(tf, "newick", case_sensitive_taxon_labels=True, preserve_underscores=True))
         except ValueError:
             sys.stderr.write('NOTE: ValueError reading from file %s, ' % tf)
             if options.ignore_read_errors:
@@ -177,15 +219,31 @@ for intree, treefile in izip_longest(intrees, options.treefiles):
         #prune taxa first with patterns, THEN look for an outgroup pattern.
         #outgroup pattern could be specified that matches something that has
         #already been deleted
-        if options.prune_patterns is not None:
-            leaves = intree.leaf_nodes()
-            for l in leaves:
-                for to_prune in options.prune_patterns:
-                    if re.search(to_prune, l.taxon.label) is not None:
-                        to_remove.add(l.taxon.label)
+        if options.prune_patterns or options.pattern_file:
+            sys.stderr.write('pruning ...\n')
+            if options.pattern_file:
+                with open(options.pattern_file, 'rb') as pfile:
+                    prune_patterns = [ line.strip() for line in pfile ]
+            else:
+                prune_patterns = options.prune_patterns
+            
+            if options.verbatim:
+                #need to test what fastest string identity test is, think that this is pretty good
+                #dangerous to do == because depends on identical strings being internally the same
+                #object (which they generally are)
+                compare = lambda x, y:x in y and y in x
+            else:
+                prune_patterns = [ re.compile(patt) for patt in prune_patterns ]
+                compare = lambda comp_pat, label: comp_pat.search(label)
+
+            for t in intree.taxon_set:
+                for to_prune in prune_patterns:
+                    if compare(to_prune, t.label):
+                        #sys.stdout.write('%s\n' % to_prune)
+                        to_remove.add(t)
                         break
-            to_retain = set(l.taxon.label for l in leaves) - to_remove
-            intree.prune_taxa_with_labels(labels=to_remove)
+            intree.prune_taxa(to_remove)
+
             #these are called on TreeLists - not sure if applicable here
             intree.taxon_set = intree.infer_taxa()
             intree.reindex_subcomponent_taxa()

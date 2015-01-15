@@ -272,6 +272,9 @@ parser.add_argument('--paren-labels', nargs='*', type=str, default=[],
 parser.add_argument('--oryza-names', action='store_true', default=False,
                     help='Do some name manipulations specific to Oryza data')
 
+parser.add_argument('--no-legend-bars', action='store_true', default=False,
+                    help='do not include a legend on the left of the figure indicating the color to triplet correspondence')
+
 #now use the tkinter gui, which may not work, or process the command line
 use_tk_gui = False
 if use_tk_gui:
@@ -345,8 +348,13 @@ fig, ax = plt.subplots(nrows=nrows, ncols=ncols, sharex=sharex, sharey=sharey, f
 #resize the overall figure so that things don't get squished (otherwise aspect ratio stays same regardless of how many cols and rows)
 #default size is apparently 8" x 6"
 origInchWidth, origInchHeight = fig.get_size_inches()
-barRegionWidthRelativeToSinglePlotWidth = 0.4724409
-barRegionInchWidth = individualPlotWidth * barRegionWidthRelativeToSinglePlotWidth
+
+if options.no_legend_bars:
+    barRegionWidthRelativeToSinglePlotWidth = 0.0
+    barRegionInchWidth = 0.0
+else:
+    barRegionWidthRelativeToSinglePlotWidth = 0.4724409
+    barRegionInchWidth = individualPlotWidth * barRegionWidthRelativeToSinglePlotWidth
 
 leftInchSpace = rightInchSpace = bottomInchSpace = topInchSpace = 1.0
 interplotInchWidth = interplotInchHeight = origInchWidth + 0.1
@@ -442,76 +450,77 @@ if multiplot:
 
 ############
 #add bars to identify the three triple resolutions
-#a dummy invisible axis to allow easy specification of coordinates
-dummyAx = plt.axes([0, 0, 1, 1], axisbg=(1, 1, 1, 0))
-dummyAx.set_axis_off()
+if not options.no_legend_bars:
+    #a dummy invisible axis to allow easy specification of coordinates
+    dummyAx = plt.axes([0, 0, 1, 1], axisbg=(1, 1, 1, 0))
+    dummyAx.set_axis_off()
 
-barProportionalHeight = 0.07 / nrows
-barProportionalWidth = 0.3 * barRegionProportionalWidth
+    barProportionalHeight = 0.07 / nrows
+    barProportionalWidth = 0.3 * barRegionProportionalWidth
 
-centerLabelsOnBar = True
-labelXoffset = -0.015
-labelYoffset = 0.015
+    centerLabelsOnBar = True
+    labelXoffset = -0.015
+    labelYoffset = 0.015
 
-if options.paren_labels:
-    if len(options.paren_labels) not in [3, 4]:
-        exit('must pass either zero, three or four paren labels')
-    parenLabels = options.paren_labels
-else:
-    parenLabels = filename_to_paren_trees(options.inFiles[0], oryza=options.oryza_names)
-
-parenLabelXoffset = 0.0 / ncols
-parenLabelYoffset = 0.07 / nrows
-
-if len(options.patterns) == 1:
-    newList = []
-    for h in options.patterns[0]:
-        newList.append(h)
-    options.patterns = newList
-
-barsAtLeft = True
-barForUnres = 1
-if barsAtLeft:
-    barStartX = (barRegionProportionalWidth - barProportionalWidth) * 0.25
-    #barStartX = 0.02
-    if barForUnres:
-        barStartY = 0.85
-        barVspace = 0.175
-        barHspace = 0.0
-        barXoffset = 0.0
+    if options.paren_labels:
+        if len(options.paren_labels) not in [3, 4]:
+            exit('must pass either zero, three or four paren labels')
+        parenLabels = options.paren_labels
     else:
-        barStartY = 0.75
-        barVspace = 0.2
-        barHspace = 0.0
-        barXoffset = 0.0
-    barYoffset = barProportionalHeight + barVspace
+        parenLabels = filename_to_paren_trees(options.inFiles[0], oryza=options.oryza_names)
 
-else:
-    barStartX = 0.108
-    barStartY = 0.98
-    barVspace = 0.0
-    barHspace = 0.035
-    barXoffset = barWidth + barHspace
-    barYoffset = 0.0
+    parenLabelXoffset = 0.0 / ncols
+    parenLabelYoffset = 0.07 / nrows
 
-for series in range(3 + barForUnres):
-    barX = barStartX + barXoffset * series
-    barY = barStartY - barYoffset * series
-    barXcenter = barX + 0.5 * barProportionalWidth
-   
-    barLabelFontsize = 28
-    
-    if centerLabelsOnBar:
-        plt.text(barXcenter, barY + barProportionalHeight + labelYoffset, options.letter_labels[series], fontsize=barLabelFontsize, horizontalalignment='center', weight='bold')
+    if len(options.patterns) == 1:
+        newList = []
+        for h in options.patterns[0]:
+            newList.append(h)
+        options.patterns = newList
+
+    barsAtLeft = True
+    barForUnres = 1
+    if barsAtLeft:
+        barStartX = (barRegionProportionalWidth - barProportionalWidth) * 0.25
+        #barStartX = 0.02
+        if barForUnres:
+            barStartY = 0.85
+            barVspace = 0.175
+            barHspace = 0.0
+            barXoffset = 0.0
+        else:
+            barStartY = 0.75
+            barVspace = 0.2
+            barHspace = 0.0
+            barXoffset = 0.0
+        barYoffset = barProportionalHeight + barVspace
+
     else:
-        plt.text(barX - labelXoffset, barY - labelYoffset, options.letter_labels[series], fontsize=barLabelFontsize, horizontalalignment='center', weight='bold')
+        barStartX = 0.108
+        barStartY = 0.98
+        barVspace = 0.0
+        barHspace = 0.035
+        barXoffset = barWidth + barHspace
+        barYoffset = 0.0
 
-    plt.text(barXcenter + parenLabelXoffset, barY - parenLabelYoffset, parenLabels[series], fontsize=barLabelFontsize, horizontalalignment='center', weight='bold')
-    
-    #rec = patches.Rectangle((barX, barY), barProportionalWidth, barProportionalHeight, fc=options.greyValues[series], linewidth=4)
-    rec = patches.Rectangle((barX, barY), barProportionalWidth, barProportionalHeight, fc=actualColors[series], linewidth=4)
-    rec.set_hatch(options.patterns[series])
-    dummyAx.add_patch(rec)
+    for series in range(3 + barForUnres):
+        barX = barStartX + barXoffset * series
+        barY = barStartY - barYoffset * series
+        barXcenter = barX + 0.5 * barProportionalWidth
+       
+        barLabelFontsize = 28
+        
+        if centerLabelsOnBar:
+            plt.text(barXcenter, barY + barProportionalHeight + labelYoffset, options.letter_labels[series], fontsize=barLabelFontsize, horizontalalignment='center', weight='bold')
+        else:
+            plt.text(barX - labelXoffset, barY - labelYoffset, options.letter_labels[series], fontsize=barLabelFontsize, horizontalalignment='center', weight='bold')
+
+        plt.text(barXcenter + parenLabelXoffset, barY - parenLabelYoffset, parenLabels[series], fontsize=barLabelFontsize, horizontalalignment='center', weight='bold')
+        
+        #rec = patches.Rectangle((barX, barY), barProportionalWidth, barProportionalHeight, fc=options.greyValues[series], linewidth=4)
+        rec = patches.Rectangle((barX, barY), barProportionalWidth, barProportionalHeight, fc=actualColors[series], linewidth=4)
+        rec.set_hatch(options.patterns[series])
+        dummyAx.add_patch(rec)
 ##########
 
 #plot the lines, and set various properties

@@ -159,18 +159,23 @@ if not options.treefiles:
         sys.exit('ERROR: must pass filenames to output sequence lengths\n')
     trees = sys.stdin.read()
     #try two input formats
+    #Think that there was some reason that I added preserve_underscores=True here, but it ended up causing more serious problems elsewhere
     try:
-        intrees.extend(dendropy.TreeList.get_from_string(trees, "nexus", case_sensitive_taxon_labels=True, preserve_underscores=True))
+        #intrees.extend(dendropy.TreeList.get_from_string(trees, "nexus", case_sensitive_taxon_labels=True, preserve_underscores=True))
+        intrees.extend(dendropy.TreeList.get_from_string(trees, "nexus", case_sensitive_taxon_labels=True))
     except DataError:
-        intrees.extend(dendropy.TreeList.get_from_string(trees, "newick", case_sensitive_taxon_labels=True, preserve_underscores=True))
+        #intrees.extend(dendropy.TreeList.get_from_string(trees, "newick", case_sensitive_taxon_labels=True, preserve_underscores=True))
+        intrees.extend(dendropy.TreeList.get_from_string(trees, "newick", case_sensitive_taxon_labels=True))
 
 else:
     for tf in options.treefiles:
         #try two input formats
         try:
-            intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus", case_sensitive_taxon_labels=True, preserve_underscores=True))
+            #intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus", case_sensitive_taxon_labels=True, preserve_underscores=True))
+            intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus", case_sensitive_taxon_labels=True))
         except DataError:
-            intrees.extend(dendropy.TreeList.get_from_path(tf, "newick", case_sensitive_taxon_labels=True, preserve_underscores=True))
+            #intrees.extend(dendropy.TreeList.get_from_path(tf, "newick", case_sensitive_taxon_labels=True, preserve_underscores=True))
+            intrees.extend(dendropy.TreeList.get_from_path(tf, "newick", case_sensitive_taxon_labels=True))
         except ValueError:
             sys.stderr.write('NOTE: ValueError reading from file %s, ' % tf)
             if options.ignore_read_errors:

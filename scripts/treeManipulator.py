@@ -95,13 +95,26 @@ mut_group3.add_argument('--prune-to-common-taxa', action='store_true', default=F
 mut_group3.add_argument('--only-all-taxa', action='store_true', default=False, 
                     help='only include those trees that contain the union of all taxa in any tree (default False)')
 
-filterArgs.add_argument('-p', '--prune-patterns', action='append', default=None, 
+
+mut_group4 = filterArgs.add_mutually_exclusive_group()
+
+mut_group4.add_argument('-p', '--prune-patterns', action='append', default=None, 
                     help='regex patterns for taxon names to strip from trees before output.  Single pattern per flag, but can appear multiple times')
 
-filterArgs.add_argument('-f', '--pattern-file', default=None, type=str,
+mut_group4.add_argument('-f', '--prune-pattern-file', default=None, type=str,
                     help='read regex patterns from indicated file for taxon names to strip from trees before output')
 
-mut_group3.add_argument('--verbatim', action='store_true', default=False, 
+mut_group4.add_argument('--prune-from-mrca', nargs=2, default=None, 
+                    help='prune subtree defined by MRCA of two taxon labels')
+
+mut_group4.add_argument('--retain-patterns', action='append', default=None, 
+                    help='regex patterns for taxon names to maintain in tree - all non-matching taxa are pruned. Single pattern per flag, but can appear multiple times')
+
+mut_group4.add_argument('--retain-pattern-file', default=None, type=str,
+                    help='read regex patterns from indicated file for taxon names to retain in tree - all non-matching taxa are pruned')
+
+
+filterArgs.add_argument('--verbatim', action='store_true', default=False, 
                     help='treat the --prune-patterns or patterns read from --pattern-file as exact taxon names rather than regex patterns')
 
 filterArgs.add_argument('--max-trees', type=int, default=None,
@@ -220,17 +233,24 @@ for intree, treefile in izip_longest(intrees, options.treefiles):
         if options.make_bifurcating and hasPoly:
             intree.resolve_polytomies(update_splits=True)
             madeBifurcating += 1
-        to_remove = set()
         #prune taxa first with patterns, THEN look for an outgroup pattern.
         #outgroup pattern could be specified that matches something that has
         #already been deleted
-        if options.prune_patterns or options.pattern_file:
-            sys.stderr.write('pruning ...\n')
-            if options.pattern_file:
-                with open(options.pattern_file, 'rb') as pfile:
-                    prune_patterns = [ line.strip() for line in pfile ]
+        if options.prune_patterns or options.retain_patterns or options.prune_pattern_file or options.retain_pattern_file:
+            if options.prune_patterns or options.prune_pattern_file:
+                sys.stderr.write('pruning matching taxa ...\n')
+                pruning = True
             else:
-                prune_patterns = options.prune_patterns
+                sys.stderr.write('retaining matching taxa ...\n')
+                pruning = False
+
+            if options.prune_pattern_file or options.retain_pattern_file:
+                with open(options.prune_pattern_file or options.retain_pattern_file, 'rb') as pfile:
+                    patterns = [ line.strip() for line in pfile ]
+            else:
+                patterns = options.prune_patterns or options.retain_patterns
+            
+            matches = set()
             
             if options.verbatim:
                 #need to test what fastest string identity test is, think that this is pretty good
@@ -238,16 +258,20 @@ for intree, treefile in izip_longest(intrees, options.treefiles):
                 #object (which they generally are)
                 compare = lambda x, y:x in y and y in x
             else:
-                prune_patterns = [ re.compile(patt) for patt in prune_patterns ]
+                patterns = [ re.compile(patt) for patt in patterns ]
                 compare = lambda comp_pat, label: comp_pat.search(label)
 
             for t in intree.taxon_set:
-                for to_prune in prune_patterns:
+                for to_prune in patterns:
                     if compare(to_prune, t.label):
                         #sys.stdout.write('%s\n' % to_prune)
-                        to_remove.add(t)
+                        matches.add(t)
                         break
-            intree.prune_taxa(to_remove)
+            if pruning:
+                #print 'PRUNING', matches, intree.is_rooted, intree.is_unrooted
+                intree.prune_taxa(matches)
+            else:
+                intree.retain_taxa(matches)
 
             #these are called on TreeLists - not sure if applicable here
             intree.taxon_set = intree.infer_taxa()
@@ -297,6 +321,17 @@ if options.prune_to_common_taxa:
     log.write('pruning all trees to set of %d common taxa\n' % len(common_taxon_labels))
 
     outtrees.taxon_set = outtrees[0].taxon_set
+
+elif options.prune_from_mrca:
+    new_outtrees = dendropy.TreeList(taxon_set=outtrees.taxon_set)
+    for tree in outtrees:
+        mrca = tree.mrca(taxon_labels=options.prune_from_mrca)
+        if not mrca:
+            sys.exit('Problem finding MRCA for %s and %s.' % (options.prune_from_mrca[0], options.prune_from_mrca[1]))
+        #subtree_tips = [ it.taxon for it in mrca.leaf_iter() ]
+        #tree.retain_taxa(subtree_tips)
+        new_outtrees.append(dendropy.Tree(seed_node=mrca))
+    outtrees = new_outtrees
 
 elif options.only_all_taxa:
     #only keep trees that contain all taxa observed in any tree

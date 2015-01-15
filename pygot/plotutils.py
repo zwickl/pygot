@@ -12,7 +12,7 @@ try:
 except ImportError:
     sys.exit('matplotlib needs to be installed to use this module')
 
-from pygot.utils import flatten_array, linspace, find_shortest_unique_leading_substrings
+from pygot.utils import flatten_array, linspace, find_shortest_unique_leading_substrings, ArgparseActionAppendToDefault
 
 
 def padded(toPad, n, fillvalue=None):
@@ -491,30 +491,6 @@ def prepare_plot_kwargs(kwargDict, optionList, fontscaler=1.0):
             outKwargs[key] = outKwargs[key] * fontscaler
 
     return outKwargs
-
-
-class ArgparseActionAppendToDefault(argparse.Action):
-    '''This is in a way related to the above prepare_plot_kwargs function.
-    Normally defaults can be set on argparse options, but will be overridden if the 
-    argument appears on the command line.  This will allow arguments passed on the
-    command line to simply be appended to the default list.  This would mainly be 
-    used for kwargs specified on the command line and a PlottingArgumentParser
-    instantiated with some kwargs set as defaults. Because the values that would
-    come from the commandline appear later, they should trump earlier ones in the
-    prepare_plot_kwargs function.
-    '''
-    def __call__(self, parser, namespace, values, option_string=None):
-        #print '%r %r %r' % (self.dest, self.default, values)
-        if not hasattr(self, 'default'):
-            raise ValueError('only makes sense to call AppendToDefaultArgparseAction \
-                    when default value to argument is defined')
-        if not isinstance(self.default, list):
-            raise ValueError('only makes sense to call AppendToDefaultArgparseAction \
-                    when defaults are in a list')
-        if isinstance(values, str):
-            values = values.split()
-
-        setattr(namespace, self.dest, self.default + values)
 
 
 class PlottingHistogramArgumentParser(argparse.ArgumentParser):

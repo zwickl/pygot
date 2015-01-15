@@ -1,14 +1,18 @@
 #!/usr/bin/env python
+import sys
 import re
 import shlex
 import os
 from argparse import ArgumentParser
 
-from Bio import AlignIO
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio.Alphabet import generic_dna
-from Bio.Align import MultipleSeqAlignment
+try:
+    from Bio import AlignIO
+    from Bio.Seq import Seq
+    from Bio.SeqRecord import SeqRecord
+    from Bio.Alphabet import generic_dna
+    from Bio.Align import MultipleSeqAlignment
+except ImportError:
+    sys.exit('Biopython needs to be installed to use this script')
 
 from pygot.biopyutils import *
 #from oryzautils import *

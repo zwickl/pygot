@@ -279,7 +279,11 @@ parser.add_argument('--no-legend-bars', action='store_true', default=False,
 use_tk_gui = False
 if use_tk_gui:
     from Tkinter import *
-    from tkinterutils import *
+    #try to use the tkarg package, otherwise the deprecated tk functions in pygot
+    try:
+        from tkarg import ArgparseGui
+    except ImportError:
+        from tkinterutils import *
     from ttk import *
     root = Tk()
     gui = ArgparseGui(root, parser, height=1000, width=1600)

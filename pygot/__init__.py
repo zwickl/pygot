@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 
 ##############################################################################
-##  DendroPy Phylogenetic Computing Library.
+##  PhYloGenOmic Tools : Python scripts for processing and summarizing phylogenomic 
+##  analyses
 ##
-##  Copyright 2010 Jeet Sukumaran and Mark T. Holder.
+##  Copyright 2013 Derrick J Zwickl
 ##  All rights reserved.
 ##
 ##  See "LICENSE.txt" for terms and conditions of usage.
@@ -11,8 +12,9 @@
 ##  If you use this work or any portion thereof in published work,
 ##  please cite it as:
 ##
-##     Sukumaran, J. and M. T. Holder. 2010. DendroPy: a Python library
-##     for phylogenetic computing. Bioinformatics 26: 1569-1571.
+##  Zwickl DJ, Stein JC, Wing RA, Ware D, Sanderson MJ. 2014. Disentangling 
+##  methodological and biological sources of gene tree discordance on Oryza 
+##  (Poaceae) chromosome 3. Systematic Biology. 63(5):645-659.
 ##
 ##############################################################################
 
@@ -36,7 +38,7 @@ else:
 from pygot.quartets import *
 from pygot import utils
 from pygot import dendroutils
-from pygot import tkinterutils
+#from pygot import tkinterutils
 #from pygot import biopyutils
 
 ###############################################################################

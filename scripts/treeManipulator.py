@@ -126,6 +126,8 @@ filterArgs.add_argument('--subsample', type=int, default=None,
 
 privateArgs = parser.add_argument_group('PRIVATE FUNCTIONS (END USERS HAVE NO REASON TO USE THESE)')
 
+privateArgs.GUI_IGNORE = True
+
 privateArgs.add_argument('--output-seq-lengths', action='store_true', default=False, 
                     help='(private) very specialized function to extract and output sequence lengths from tree filenames. Assumes only one tree per file!')
 
@@ -135,7 +137,11 @@ tk_root = None
 if len(sys.argv) == 1:
     try:
         from Tkinter import *
-        from pygot.tkinterutils import *
+        #try to use the tkarg package, otherwise the deprecated tk functions in pygot
+        try:
+            from tkarg import ArgparseGui
+        except ImportError:
+            from tkinterutils import *
         from ttk import *
     except ImportError:
         sys.stderr.write('%s\n' % parser.format_help())
@@ -143,7 +149,7 @@ if len(sys.argv) == 1:
         sys.exit()
 
     tk_root = Tk()
-    tk_gui = ArgparseGui(parser, tk_root, width=1152, height=720, output_frame=False, destroy_when_done=True)
+    tk_gui = ArgparseGui(parser, tk_root, width=1152, height=720)
 
     #Need to do this on OS X to bring window to front, otherwise root.lift() should work
     if 'darwin' in sys.platform.lower():

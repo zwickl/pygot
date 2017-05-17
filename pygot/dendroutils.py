@@ -3,11 +3,23 @@ import copy
 import dendropy
 
 #this deals with changes in DendroPy 4
+from dendropy.utility import bitprocessing
+'''
 try:
     from dendropy.calculate import treesplit
 except ImportError:
     from dendropy import treesplit
+'''
 
+def compat_encode_bipartitions(tree, **kwargs):
+    '''Convenience function dealing with different ways of encoding splits in DP4'''
+    if hasattr(tree, "encode_bipartitions"):
+        if 'delete_outdegree_one' in kwargs:
+            val = kwargs.pop('delete_outdegree_one')
+            kwargs['collapse_unrooted_basal_bifurcation'] = val
+        tree.encode_bipartitions(**kwargs)
+    elif not hasattr(tree, "bipartition_encoding") or not tree.bipartition_encoding:
+        tree.encode_bipartitions(**kwargs)
 
 class CustomTree(dendropy.Tree):
     '''Override of denodropy.Tree, which redefines equality as an RF distance of 0.'''
@@ -53,8 +65,9 @@ class CustomTreeList(dendropy.TreeList):
 
         return float(count) / len(self)
 
-    def masked_frequency_of_split(self, **kwargs):
-        """Adaptation of dendropy.TreeList.frequency_of_split that takes a taxon mask. 
+    #def masked_frequency_of_split(self, **kwargs):
+    def masked_frequency_of_bipartition(self, **kwargs):
+        """Adaptation of dendropy.TreeList.frequency_of_bipartition that takes a taxon mask. 
         
         This allows identifying splits on a subset of taxa within a larger tree without
         pruning any tree structures, which is much slower.
@@ -69,24 +82,24 @@ class CustomTreeList(dendropy.TreeList):
         this function returns the proportion of trees in self in which the 
         split is found.
         """
-        partialMask = kwargs["mask"] if "mask" in kwargs else self.taxon_set.all_taxa_bitmask()
+        partialMask = kwargs["mask"] if "mask" in kwargs else self.taxon_namespace.all_taxa_bitmask()
 
         if "split_bitmask" in kwargs:
             targetSplit = kwargs["split_bitmask"]
         else:
-            targetSplit = self.taxon_set.get_taxa_bitmask(**kwargs)
+            targetSplit = self.taxon_namespace.get_taxa_bitmask(**kwargs)
             k = kwargs.values()[0]
-            if treesplit.count_bits(targetSplit) != len(k):
+            if bitprocessing.num_set_bits(targetSplit) != len(k):
                 raise IndexError('Not all taxa could be mapped to split (%s): %s' 
-                    % (self.taxon_set.split_bitmask_string(targetSplit), k))
+                    % (self.taxon_namespace.split_bitmask_string(targetSplit), k))
         found = 0
         total = 0
         for tree in self:
-            if not hasattr(tree, "split_edges"):
-                treesplit.encode_splits(tree)
+            tree.compat_encode_bipartitions()
             total += 1
             compSplit = (~targetSplit & partialMask)
-            for test_split in tree.split_edges:
+            #for test_split in tree.split_edges:
+            for test_split in tree.reference_tree.bipartition_encoding:
                 if not treesplit.is_compatible(test_split, targetSplit, partialMask):
                     break
                 masked_test = (test_split & partialMask)
@@ -114,22 +127,21 @@ class CustomTreeList(dendropy.TreeList):
         #if returnMatches is requested, return matching trees
         matches = []
 
-        partialMask = kwargs["mask"] if "mask" in kwargs else self.taxon_set.all_taxa_bitmask()
+        partialMask = kwargs["mask"] if "mask" in kwargs else self.taxon_namespace.all_taxa_bitmask()
 
         if "split_bitmask" in kwargs:
             targetSplits = kwargs["split_bitmask"]
         else:
-            split = self.taxon_set.get_taxa_bitmask(**kwargs)
+            split = self.taxon_namespace.get_taxa_bitmask(**kwargs)
             k = kwargs.values()[0]
             if treesplit.count_bits(split) != len(k):
                 raise IndexError('Not all taxa could be mapped to split (%s): %s' 
-                    % (self.taxon_set.split_bitmask_string(split), k))
+                    % (self.taxon_namespace.split_bitmask_string(split), k))
 
         found = 0
         total = 0
         for tnum, tree in enumerate(self):
-            if not hasattr(tree, "split_edges"):
-                treesplit.encode_splits(tree)
+            compat_encode_bipartitions(tree)
             total += 1
             matchedSplits = 0
             incompatible = False
@@ -137,13 +149,14 @@ class CustomTreeList(dendropy.TreeList):
             for num, targetSplit in enumerate(targetSplits):
                 compSplit = (~targetSplit & partialMask)
                 #work through the splits in this tree
-                for test_split in tree.split_edges:
+                for test_split in tree.bipartition_encoding:
                     #mask out unimportant taxa
-                    masked_test = (test_split & partialMask)
+                    masked_test = (test_split.split_bitmask & partialMask)
                     #don't need to test anything if masked_test is empty 
                     #(i.e., no taxa in partialMask appear on opposite sides of test_split
                     if masked_test:
-                        if not treesplit.is_compatible(test_split, targetSplit, partialMask):
+                        #if not treesplit.is_compatible(test_split.split_bitmask, targetSplit, partialMask):
+                        if not dendropy.Bipartition.is_compatible_bitmasks(test_split.split_bitmask, targetSplit, partialMask):
                             incompatible = True
                             break
                         elif targetSplit == masked_test or compSplit == masked_test:
@@ -211,7 +224,7 @@ class CustomTreeList(dendropy.TreeList):
         #print len(self)
         #for t in self:
         #    print t.as_newick_string()
-        newList = TreeList(self, taxon_set=self.taxon_set)
+        newList = TreeList(self, taxon_namespace=self.taxon_namespace)
         #print len(newList)
         self[:] = []
         for num, tr in enumerate(newList):
@@ -250,7 +263,7 @@ class CustomTreeList(dendropy.TreeList):
 
         taxon_obj_namer = lambda x: "tax_%s" % id(x)
         taxon_map = {}
-        for taxon in self.taxon_set:
+        for taxon in self.taxon_namespace:
             tobj_name = taxon_obj_namer(taxon)
             if taxon.label is not None:
                 label = "'" + taxon.label + "'"
@@ -260,7 +273,7 @@ class CustomTreeList(dendropy.TreeList):
                 oid_str = ', oid="%s"' % taxon.oid
             else:
                 oid_str = ""
-            p.append("%s = %s.taxon_set.require_taxon(label=%s%s)" 
+            p.append("%s = %s.taxon_namespace.require_taxon(label=%s%s)" 
                 % (tobj_name,
                    tree_list_name,
                    label,
@@ -278,7 +291,7 @@ class CustomTreeList(dendropy.TreeList):
                 oid_str = ', oid="%s"' % tree.oid
             else:
                 oid_str = ""
-            p.append("%s = dendropy.Tree(label=%s, taxon_set=%s.taxon_set%s)" 
+            p.append("%s = dendropy.Tree(label=%s, taxon_namespace=%s.taxon_namespace%s)" 
                 % (tree_obj_name,
                    label,
                    tree_list_name,

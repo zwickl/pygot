@@ -169,10 +169,10 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
             for (trees, treefile) in itertools.izip(allTreesPerTreefile, treefileSubList):
                 #verify that the correct taxa are present
                 #this aliases the function name (on the instance) to be compatible with the change to has_taxa_labels in DendroPy 4
-                if not hasattr(trees.taxon_set, 'has_taxa'):
-                    trees.taxon_set.has_taxa = trees.taxon_set.has_taxa_labels
+                if not hasattr(trees.taxon_namespace, 'has_taxa'):
+                    trees.taxon_namespace.has_taxa = trees.taxon_namespace.has_taxa_labels
                 
-                if trees.taxon_set.has_taxa(labels=requiredLabels):
+                if trees.taxon_namespace.has_taxa(labels=requiredLabels):
                     numFound += 1
                     #masked = True
                     #if masked:
@@ -187,12 +187,12 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
                             #this would generate all possible splits, if one wanted to test for certain splits within a larger tree
                             possibleSplits = [ list(sp) for sp in itertools.combinations(requiredLabels, 2) ]
                         
-                        backboneSplitMask = theseTrees.taxon_set.get_taxa_bitmask(labels=requiredLabels)
+                        backboneSplitMask = theseTrees.taxon_namespace.get_taxa_bitmask(labels=requiredLabels)
 
                         possibleSplitMasks = []
                         #these sets will have only one bipartition each currently, but the frequency function can handle more
                         for splitSet in possibleSplits:
-                            possibleSplitMasks.append([theseTrees.taxon_set.get_taxa_bitmask(labels=splitSet)])
+                            possibleSplitMasks.append([theseTrees.taxon_namespace.get_taxa_bitmask(labels=splitSet)])
                         
                         freqs = [ (theseTrees.masked_frequency_of_splitlist(split_bitmask=splitMask, mask=backboneSplitMask), num) for (num, splitMask) in enumerate(possibleSplitMasks) ]
                         maxFreq = max(freqs)

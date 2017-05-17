@@ -11,10 +11,9 @@ import dendropy
 
 #for dendropy 4 compatability
 try:
-    from dendropy.error import DataError
+    from dendropy.error import DataError as DataParseError
 except:
-    from dendropy.utility.error import DataError
-
+    from dendropy.utility.error import DataParseError
 
 def check_for_polytomies(tree):
     '''Check for polytomies by looking for nodes with > 3 neighbors.'''
@@ -124,6 +123,16 @@ filterArgs.add_argument('--subsample', type=int, default=None,
                     help='subsample the specified number of trees from the total number that match other filtering criteria')
 
 
+
+annotateArgs = parser.add_argument_group('ARGUMENTS FOR TREE FILTERING/MANIPULATION')
+
+annotateArgs.add_argument('--annotate-taxa-file', default=None, type=str,
+                    help='read a list of taxa from file, and add annotations to them in the output tree')
+
+annotateArgs.add_argument('--annotate-string', default=None, type=str,
+                    help='annotation string to attach to taxa listed in --annotate-taxa-file')
+
+
 privateArgs = parser.add_argument_group('PRIVATE FUNCTIONS (END USERS HAVE NO REASON TO USE THESE)')
 
 privateArgs.GUI_IGNORE = True
@@ -171,6 +180,7 @@ if len(sys.argv) == 1:
 else:
     options = parser.parse_args()
 
+
 intrees = dendropy.TreeList()
 if not options.treefiles:
     sys.stderr.write('NOTE: reading trees from stdin\n')
@@ -182,7 +192,7 @@ if not options.treefiles:
     try:
         #intrees.extend(dendropy.TreeList.get_from_string(trees, "nexus", case_sensitive_taxon_labels=True, preserve_underscores=True))
         intrees.extend(dendropy.TreeList.get_from_string(trees, "nexus", case_sensitive_taxon_labels=True))
-    except DataError:
+    except DataParseError:
         #intrees.extend(dendropy.TreeList.get_from_string(trees, "newick", case_sensitive_taxon_labels=True, preserve_underscores=True))
         intrees.extend(dendropy.TreeList.get_from_string(trees, "newick", case_sensitive_taxon_labels=True))
 
@@ -192,7 +202,7 @@ else:
         try:
             #intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus", case_sensitive_taxon_labels=True, preserve_underscores=True))
             intrees.extend(dendropy.TreeList.get_from_path(tf, "nexus", case_sensitive_taxon_labels=True))
-        except DataError:
+        except DataParseError:
             #intrees.extend(dendropy.TreeList.get_from_path(tf, "newick", case_sensitive_taxon_labels=True, preserve_underscores=True))
             intrees.extend(dendropy.TreeList.get_from_path(tf, "newick", case_sensitive_taxon_labels=True))
         except ValueError:
@@ -242,15 +252,23 @@ for intree, treefile in izip_longest(intrees, options.treefiles):
         #prune taxa first with patterns, THEN look for an outgroup pattern.
         #outgroup pattern could be specified that matches something that has
         #already been deleted
-        if options.prune_patterns or options.retain_patterns or options.prune_pattern_file or options.retain_pattern_file:
+        if options.prune_patterns or options.retain_patterns or options.prune_pattern_file or options.retain_pattern_file or options.annotate_taxa_file:
             if options.prune_patterns or options.prune_pattern_file:
                 sys.stderr.write('pruning matching taxa ...\n')
                 pruning = True
             else:
                 sys.stderr.write('retaining matching taxa ...\n')
                 pruning = False
-
-            if options.prune_pattern_file or options.retain_pattern_file:
+            
+            annotating =False 
+            if options.annotate_taxa_file:
+                annotating = True
+                sys.stderr.write('annotating matching taxa with %s...\n' % options.annotate_string)
+                
+                with open(options.annotate_taxa_file, 'rb') as afile:
+                    patterns = [ line.strip() for line in afile ]
+           
+            elif options.prune_pattern_file or options.retain_pattern_file:
                 with open(options.prune_pattern_file or options.retain_pattern_file, 'rb') as pfile:
                     patterns = [ line.strip() for line in pfile ]
             else:
@@ -268,16 +286,29 @@ for intree, treefile in izip_longest(intrees, options.treefiles):
                 compare = lambda comp_pat, label: comp_pat.search(label)
 
             for t in intree.taxon_set:
-                for to_prune in patterns:
-                    if compare(to_prune, t.label):
-                        #sys.stdout.write('%s\n' % to_prune)
+                for to_match in patterns:
+                    if compare(to_match, t.label):
+                        #sys.stdout.write('%s\n' % to_match)
                         matches.add(t)
                         break
-            if pruning:
-                #print 'PRUNING', matches, intree.is_rooted, intree.is_unrooted
-                intree.prune_taxa(matches)
+                    elif compare(to_match, re.sub('_', ' ', t.label)):
+                        matches.add(t)
+                        break
+                    elif compare(to_match, re.sub(' ', '_', t.label)):
+                        matches.add(t)
+                        break
+
+            if annotating:
+                key, val = options.annotate_string.split('=')
+                for match in matches:
+                    intree.find_node_for_taxon(match).annotations.add_new('%s'  % key, '%s' %  val)
+
             else:
-                intree.retain_taxa(matches)
+                if pruning:
+                    #print 'PRUNING', matches, intree.is_rooted, intree.is_unrooted
+                    intree.prune_taxa(matches)
+                else:
+                    intree.retain_taxa(matches)
 
             #these are called on TreeLists - not sure if applicable here
             intree.taxon_set = intree.infer_taxa()
@@ -401,9 +432,9 @@ if outtrees:
         if not options.retain_comments:
             for tree in outtrees:
                 tree.comments = []
-        outtrees.write(out, "nexus", suppress_edge_lengths=options.suppress_branchlengths, suppress_rooting=supress_root_comment)
+        outtrees.write(out, schema="nexus", suppress_edge_lengths=options.suppress_branchlengths, suppress_rooting=supress_root_comment)
     else:
-        outtrees.write(out, "newick", suppress_edge_lengths=options.suppress_branchlengths, suppress_rooting=supress_root_comment)
+        outtrees.write(out, schema="newick", suppress_edge_lengths=options.suppress_branchlengths, suppress_rooting=supress_root_comment)
 
     if options.output_seq_lengths:
         length_filename = 'seqlens.' + options.outfile if options.outfile else 'seqlens'

@@ -60,9 +60,12 @@ will attempt to install Dendropy for you if necessary.
 I highly recommend Dendropy for your phylogenetic computing needs!
 
 -The matplotlib library (http://matplotlib.org/) is required for making any 
-figures.  This can be non-trivial to get installed, and downloading an installer
-package for your system generally seems to work better than using easy_install
-or pip.  The pygot setup script will not attempt to install this for you.
+figures.  This can be non-trivial to get installed, and the pygot setup script 
+will not attempt to install it for you.
+Using a python manager like anaconda or miniconda are good options for 
+installing matplotlib.  Otherwise, download an installer
+package for your system, rather than trying to use easy_install
+or pip.
 
 -The block-shift related functions have no external dependencies.
 

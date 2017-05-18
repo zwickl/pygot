@@ -107,7 +107,7 @@ def dendropy_score_triples(quartets, treefiles, oryza_names=False, write_trees=F
             try:
                 if chunkStart == 0:
                     sys.stdout.write('attempting to read tree files in %s format ...' % form)
-                allTreesPerTreefile = [ CustomTreeList.get_from_path(f, form) for f in treefileSubList ]
+                allTreesPerTreefile = [ CustomTreeList.get_from_path(f, form, preserve_underscores=True) for f in treefileSubList ]
                 #now we know what the format is, and don't need to try on the next chunk
                 formats = [form]
                 if chunkStart == 0:
